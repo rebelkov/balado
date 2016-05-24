@@ -43,6 +43,7 @@ print ("Height "..display.contentHeight)
 local size_x=display.contentWidth / W_LEN
 local size_y=display.contentHeight / W_LEN
 local levels = {}
+local speedOvni=50
 
 --matrcie de level
 -- value 1 - objet fixe
@@ -61,7 +62,7 @@ local levels = {}
                          {0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0},
                          {0,0,0,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0},
                           {0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
+                          {0,0,0,0,0,1,0,0,1,2,0,0,0,0,0,0,0,1,0,0},
                           {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
                           {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
                           {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
@@ -71,9 +72,9 @@ local levels = {}
 
 	local blocs = display.newGroup()
 
-local playerCollisionFilter = { categoryBits=1, maskBits=6 } --collision avec bloc et brick(2)
-local brikCollisionFilter = { categoryBits=2, maskBits=1 } --collision avec player(2)
-local blocCollisionFilter = { categoryBits=4, maskBits=2 } --collision avec brick(2)
+local playerCollisionFilter = { categoryBits=1, maskBits=6 } --collision avec brick(2) et ovni(4)
+local brikCollisionFilter = { categoryBits=2, maskBits=5 } --collision avec player(1) et ovni (4)
+local ovniCollisionFilter = { categoryBits=4, maskBits=3 } --collision avec brick(2) et player(1)
 
 --function pour calculer la distance entre deux points
 local function distanceBetween( point1, point2 )
@@ -245,7 +246,7 @@ local function blocCollision(event)
 			end 
 			isFollowing = 0
 			print ("Debut colision au point "..follower.nextPoint .." / "..#pathPoints)
-			print ("je recule de "..nbcase_rebond.." cases");
+			print ("je vais reculer de "..nbcase_rebond.." cases");
 			if (nbcase_rebond > 0 and #pathPoints > 0) then
 				anchorPoints[1].x = pathPoints[follower.nextPoint-nbcase_rebond].x
 				anchorPoints[1].y = pathPoints[follower.nextPoint-nbcase_rebond].y
@@ -265,13 +266,14 @@ local function blocCollision(event)
 							y = pathPoints[follower.nextPoint-nbcase_rebond].y
 				})
 
-   				clearPath()
+   				
    		 	end
 				
 	elseif event.phase == "ended" then
 	-- pathPoints[#pathPoints].x = anchorPoints[1].x 
 	-- pathPoints[#pathPoints].y = anchorPoints[1].y 
 	print ("collision ended "..#pathPoints)
+	clearPath()
 	--clearPath()
 	end
 
@@ -280,6 +282,30 @@ local function blocCollision(event)
 end
 
 
+-- gestion de la colision ovni avec un bloc
+local function ovniCollision(event)
+	if event.phase== 'began' then
+		print ("ovni collision began de "..event.target.name.." avec "..event.other.name)
+		if event.other.name == 'brick'  then
+		 		 print("colision avec "..event.other.name)
+		 		
+		 		 event.target:setLinearVelocity(event.target.speed, 0 )
+		 		 event.target.speed = - event.target.speed
+		 		 return true
+		 		
+			end
+		
+	elseif event.phase == "ended" then
+		print ("ovni collision ended ")
+		if event.other.name == 'player' then
+			print ("ARRET Transition ")
+			event.target:setLinearVelocity(0, 0 )
+			transition.cancel("rebondObject")
+			return true
+		  		
+		end
+	end
+end
 
 
 --creation du level 
@@ -302,6 +328,19 @@ function buildLevel(level)
                 physics.addBody(brick, {density = 1, friction = 0, bounce = 0,filter=brikCollisionFilter})
                 brick.bodyType = 'static'
                 blocs.insert(blocs, brick)
+            end
+            if(level[i][j] == 2) then
+            	local ovni=display.newRect(120,220,size_x,size_y)
+            	ovni.name = 'ovni'
+            	ovni.x = size_x*j
+            	ovni.y = size_y*i
+            	physics.addBody(ovni,{density = 1, friction = 0, bounce = 0,filter=ovniCollisionFilter})
+            	ovni.bodyType = 'dynamic'
+            	ovni.gravityScale = 0
+            	ovni.speed = speedOvni
+            	ovni:setLinearVelocity( speedOvni, 0 )
+            	ovni:addEventListener( 'collision', ovniCollision )
+            	blocs.insert(blocs,ovni)
             end
         end
     end
@@ -360,6 +399,7 @@ function scene:create( event )
 	--creation du sprite
 	follower = display.newSprite( playerSheet, sequenceData ) 
 	follower.x= -15
+	follower.name = "player"
 
 	physics.addBody (follower, {bounce=0.8},{filter=playerCollisionFilter})
 	follower.isSleepingAllowed = false
