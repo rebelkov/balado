@@ -75,13 +75,18 @@ local playerCollisionFilter = { categoryBits=1, maskBits=6 } --collision avec bl
 local brikCollisionFilter = { categoryBits=2, maskBits=1 } --collision avec player(2)
 local blocCollisionFilter = { categoryBits=4, maskBits=2 } --collision avec brick(2)
 
-
+--function pour calculer la distance entre deux points
 local function distanceBetween( point1, point2 )
 	local xfactor = point2.x-point1.x ; local yfactor = point2.y-point1.y
 	local distanceBetween = math.sqrt((xfactor*xfactor) + (yfactor*yfactor))
 	return distanceBetween
 end
 
+
+--Fonction de reinit du chemin et du trace
+-- suppression des points et des segments utilises
+-- supression de la transition
+-- supression des objets du module follower encore presents
 local function clearPath()
 	--reset/clear core
 		if ( path ) then display.remove( path ) end
@@ -99,6 +104,24 @@ local function clearPath()
 end
 
 
+--fonction tracage du chemin - appel suite a evenement move
+-- phase 1 - init
+--  			nettoyage chemin 
+--				calcul de distance avec point initial
+--				if distance > 20 alors nouveaux point avec coordonnee
+-- phase 2 - move -  mouvement et distance < 20 (arret du move)
+-- cette phase ets execute tant que le user ne relache pas 
+--  		calcul de la distance avec point precedent
+--			affichage du point a la coordonnee si distance ok
+--			affichage du segment de trace, ou non
+--          sauvegarde du point final si distance ok en precision 
+-- phase 3 - fin de move - relachement
+--        sauvegarde du point arrive
+--		 ajout du chemin 	
+-- 		 calcul de la distance avec point arrivee
+--       appel du module animation du parcours
+--         update du nouveau point de depart
+--       test si arrivee
 local function drawPath( event, start )
 	if (isFollowing == 1) then
 		return true
@@ -203,39 +226,47 @@ local function drawPath( event, start )
 	return true
 end
 
+
 local function finRebond()
 
 
 	print ("Rebond - anchorPoints[1] "..anchorPoints[1].x.."/"..anchorPoints[1].y)
 end
 
+
+-- gestion de la colision du player avec un bloc
 local function blocCollision(event)
 	
 	print ("Collision "..event.phase)
 	if event.phase== 'began' then
-	
+			local nbcase_rebond=3
+			if (follower.nextPoint < nbcase_rebond) then
+				nbcase_rebond=follower.nextPoint - 1
+			end 
 			isFollowing = 0
-			print (follower.nextPoint .."  "..#pathPoints)
-			if (follower.nextPoint > 3 and #pathPoints > 0) then
-				anchorPoints[1].x = pathPoints[follower.nextPoint-3].x
-				anchorPoints[1].y = pathPoints[follower.nextPoint-3].y
-			elseif #pathPoints > 0 then 
-				anchorPoints[1].x = pathPoints[follower.nextPoint-1].x
-				anchorPoints[1].y = pathPoints[follower.nextPoint-1].y
-		
+			print ("Debut colision au point "..follower.nextPoint .." / "..#pathPoints)
+			print ("je recule de "..nbcase_rebond.." cases");
+			if (nbcase_rebond > 0 and #pathPoints > 0) then
+				anchorPoints[1].x = pathPoints[follower.nextPoint-nbcase_rebond].x
+				anchorPoints[1].y = pathPoints[follower.nextPoint-nbcase_rebond].y
+			
 			end
 
 			startx=anchorPoints[1].x
 			starty=anchorPoints[1].y
 			print ("anchorPoints[1] "..anchorPoints[1].x.."/"..anchorPoints[1].y)
 			print ("pathPoint precedent "..follower.nextPoint.. " / "..#pathPoints)
-		   transition.to( follower, {
+			
+		 	if (#pathPoints > 0) then
+		  		print ("je recule de "..nbcase_rebond.." cases  "..pathPoints[follower.nextPoint-nbcase_rebond].x.. " / "..pathPoints[follower.nextPoint-nbcase_rebond].y)
+		  		transition.to( follower, {
 							tag = "rebondObject",
-							x = pathPoints[follower.nextPoint-3].x,
-							y = pathPoints[follower.nextPoint-3].y
-						})
+							x = pathPoints[follower.nextPoint-nbcase_rebond].x,
+							y = pathPoints[follower.nextPoint-nbcase_rebond].y
+				})
 
-   		clearPath()
+   				clearPath()
+   		 	end
 				
 	elseif event.phase == "ended" then
 	-- pathPoints[#pathPoints].x = anchorPoints[1].x 
@@ -249,6 +280,10 @@ local function blocCollision(event)
 end
 
 
+
+
+--creation du level 
+--  creation des brik et bloc selon matrice de level
 function buildLevel(level)
 
     -- Level length, height
@@ -271,6 +306,10 @@ function buildLevel(level)
         end
     end
 end
+
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
 -- "scene:create()"
 function scene:create( event )
 	local sceneGroup = self.view
