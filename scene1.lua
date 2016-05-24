@@ -43,6 +43,9 @@ print ("Height "..display.contentHeight)
 local size_x=display.contentWidth / W_LEN
 local size_y=display.contentHeight / W_LEN
 local levels = {}
+
+--matrcie de level
+-- value 1 - objet fixe
  levels[1] =  {
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
                          {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -55,18 +58,23 @@ local levels = {}
                            {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
                            {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
                            {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                         {0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0},
+                         {0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0},
                          {0,0,0,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0},
-                          {0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                          {0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0},
+                          {0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
+                          {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
+                          {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
+                          {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
                            {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
                            {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
                   }
 
 	local blocs = display.newGroup()
+
+local playerCollisionFilter = { categoryBits=1, maskBits=6 } --collision avec bloc et brick(2)
+local brikCollisionFilter = { categoryBits=2, maskBits=1 } --collision avec player(2)
+local blocCollisionFilter = { categoryBits=4, maskBits=2 } --collision avec brick(2)
+
 
 local function distanceBetween( point1, point2 )
 	local xfactor = point2.x-point1.x ; local yfactor = point2.y-point1.y
@@ -256,7 +264,7 @@ function buildLevel(level)
                 brick.name = 'brick'
                 brick.x = size_x*j 
                 brick.y = size_y*i
-                physics.addBody(brick, {density = 1, friction = 0, bounce = 0})
+                physics.addBody(brick, {density = 1, friction = 0, bounce = 0,filter=brikCollisionFilter})
                 brick.bodyType = 'static'
                 blocs.insert(blocs, brick)
             end
@@ -275,17 +283,12 @@ function scene:create( event )
 	entree = display.newCircle( startx, starty, 20 )
 	entree:setFillColor(1)
 
-	arrivee = display.newCircle( endx, endy, 20 )
-	arrivee:setFillColor(1)
-
-	sceneGroup:insert(entree)
+		sceneGroup:insert(entree)
 
 	arrivee = display.newCircle( endx, endy, 20 )
 	arrivee:setFillColor(1)
 	sceneGroup:insert(arrivee)
 	sceneGroup.isVisible = true
-
-
 
 
 	buildLevel(levels[1])
@@ -312,13 +315,14 @@ function scene:create( event )
 		time = 600 
 	}
 
-
 	--local follower = display.newPolygon( 0, 0, { 0,-28, 30,28, 0,20, -30,28 } )
 	local playerSheet =  graphics.newImageSheet( "sprite_all.png", playerTable )
-	
-	follower = display.newSprite( playerSheet, sequenceData ) 
 
-	physics.addBody (follower, {bounce=0.8})
+	--creation du sprite
+	follower = display.newSprite( playerSheet, sequenceData ) 
+	follower.x= -15
+
+	physics.addBody (follower, {bounce=0.8},{filter=playerCollisionFilter})
 	follower.isSleepingAllowed = false
 	
 	 
