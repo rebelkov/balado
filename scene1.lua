@@ -49,25 +49,25 @@ local speedOvni=50
 -- value 1 - objet fixe
  levels[1] =  {
 						{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                         {0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0},
-                          {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                           {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                           {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                           {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                         {0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0},
-                         {0,0,0,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0},
-                          {0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,0,1,0,0,1,2,0,0,0,0,0,0,0,1,0,0},
-                          {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
-                          {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
-                           {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-                           {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+                        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0},
+                        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,0,0,1,2,0,0,0,0,0,0,0,0,0,0,0,1,0},
+                        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,0,1,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0},
+                        {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0},
+                        {0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,0,0,1,0,0,1,2,0,0,0,0,0,0,0,1,0,0},
+                        {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
                   }
 
 	local blocs = display.newGroup()
@@ -241,15 +241,16 @@ local function blocCollision(event)
 	print ("Collision "..event.phase)
 	if event.phase== 'began' then
 			local nbcase_rebond=3
-			if (follower.nextPoint < nbcase_rebond) then
+			if (follower.nextPoint <= nbcase_rebond) then
 				nbcase_rebond=follower.nextPoint - 1
 			end 
+			local caseprec=follower.nextPoint-nbcase_rebond
 			isFollowing = 0
 			print ("Debut colision au point "..follower.nextPoint .." / "..#pathPoints)
 			print ("je vais reculer de "..nbcase_rebond.." cases");
-			if (nbcase_rebond > 0 and #pathPoints > 0) then
-				anchorPoints[1].x = pathPoints[follower.nextPoint-nbcase_rebond].x
-				anchorPoints[1].y = pathPoints[follower.nextPoint-nbcase_rebond].y
+			if (nbcase_rebond > 0 and #pathPoints > 0 and #pathPoints > caseprec ) then
+				anchorPoints[1].x = pathPoints[caseprec].x
+				anchorPoints[1].y = pathPoints[caseprec].y
 			
 			end
 
@@ -258,14 +259,15 @@ local function blocCollision(event)
 			print ("anchorPoints[1] "..anchorPoints[1].x.."/"..anchorPoints[1].y)
 			print ("pathPoint precedent "..follower.nextPoint.. " / "..#pathPoints)
 			
-		 	if (#pathPoints > 0) then
-		  		print ("je recule de "..nbcase_rebond.." cases  "..pathPoints[follower.nextPoint-nbcase_rebond].x.. " / "..pathPoints[follower.nextPoint-nbcase_rebond].y)
+		 	if (#pathPoints > caseprec and caseprec > 0 ) then
+		  		print ("je recule de "..nbcase_rebond.." cases  "..pathPoints[caseprec].x.. " / "..pathPoints[caseprec].y)
+		  		transition.cancel("rebondObject")
 		  		transition.to( follower, {
 							tag = "rebondObject",
-							x = pathPoints[follower.nextPoint-nbcase_rebond].x,
-							y = pathPoints[follower.nextPoint-nbcase_rebond].y
+							x = pathPoints[caseprec].x,
+							y = pathPoints[caseprec].y
 				})
-
+		  		
    				
    		 	end
 				
@@ -287,20 +289,25 @@ local function ovniCollision(event)
 	if event.phase== 'began' then
 		print ("ovni collision began de "..event.target.name.." avec "..event.other.name)
 		if event.other.name == 'brick'  then
-		 		 print("colision avec "..event.other.name)
-		 		
-		 		 event.target:setLinearVelocity(event.target.speed, 0 )
+		 		 --print("colision avec "..event.other.name)
+		 		local vx, vy = event.target:getLinearVelocity()
+		 		if vy == 0 then
+		 			 event.target:setLinearVelocity(event.target.speed, 0 )
+		 		else
+		 			 event.target:setLinearVelocity(0 , event.target.speed )
+		 		end
 		 		 event.target.speed = - event.target.speed
 		 		 return true
 		 		
 			end
 		
 	elseif event.phase == "ended" then
-		print ("ovni collision ended ")
+		--print ("ovni collision ended ")
 		if event.other.name == 'player' then
 			print ("ARRET Transition ")
-			event.target:setLinearVelocity(0, 0 )
+			--event.target:setLinearVelocity(0, 0 )
 			transition.cancel("rebondObject")
+			reinitFollower()
 			return true
 		  		
 		end
@@ -315,6 +322,7 @@ function buildLevel(level)
     -- Level length, height
 
     local len = table.maxn(level)
+
     blocs:toFront()
 
     for i = 1, len do
@@ -331,14 +339,31 @@ function buildLevel(level)
             end
             if(level[i][j] == 2) then
             	local ovni=display.newRect(120,220,size_x,size_y)
+
             	ovni.name = 'ovni'
             	ovni.x = size_x*j
             	ovni.y = size_y*i
             	physics.addBody(ovni,{density = 1, friction = 0, bounce = 0,filter=ovniCollisionFilter})
             	ovni.bodyType = 'dynamic'
             	ovni.gravityScale = 0
+            	speedOvni = math.random(50,100)
             	ovni.speed = speedOvni
             	ovni:setLinearVelocity( speedOvni, 0 )
+            	ovni:addEventListener( 'collision', ovniCollision )
+            	blocs.insert(blocs,ovni)
+            end
+            if(level[i][j] == 3) then
+            	local ovni=display.newRect(120,220,size_x,size_y)
+
+            	ovni.name = 'ovni'
+            	ovni.x = size_x*j
+            	ovni.y = size_y*i
+            	physics.addBody(ovni,{density = 1, friction = 0, bounce = 0,filter=ovniCollisionFilter})
+            	ovni.bodyType = 'dynamic'
+            	ovni.gravityScale = 0
+            	speedOvni = math.random(50,100)
+            	ovni.speed = speedOvni
+            	ovni:setLinearVelocity( 0, speedOvni )
             	ovni:addEventListener( 'collision', ovniCollision )
             	blocs.insert(blocs,ovni)
             end
@@ -346,6 +371,14 @@ function buildLevel(level)
     end
 end
 
+
+function reinitFollower()
+	follower.isSleepingAllowed = false
+	follower.gravityScale=0
+	follower.angularVelocity = 0
+	follower:setLinearVelocity( 0, 0 )
+
+end
 
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
