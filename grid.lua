@@ -89,11 +89,12 @@ function handler.getNeighbors(n)
     end
   end
   -- In case diagonal movement is allowed
+  -- diagonla possible si diagonal inverse a est passable
   if handler.diagonal then
     -- Adds also adjacent passable neighbors
     for _, axis in ipairs(diagonalVectors) do
       local x, y = n.x + axis.x, n.y + axis.y
-      if handler.isPassableNode(x, y) then
+      if handler.isPassableNode(x, y) and handler.isPassableNode(x - axis.x, y) and handler.isPassableNode(x, y - axis.y) then
         table.insert(neighbors, handler.getNode(x,y))
       end
     end

@@ -11,7 +11,8 @@ display.setDefault("background", 0.5, 0.5, 0.5)
 local composer = require "composer"
 
 -- load scene1
-composer.gotoScene( "scene1" )
+--composer.gotoScene( "scene1" )
 
+composer.gotoScene( "main_algo" )
 -- Add any objects that should appear on all scenes below (e.g. tab bar, hud, etc)
 
