@@ -37,6 +37,7 @@ local isDragAvailable = 1
 local isMovedAvailable = 1
 isFollowing = 0
 local follower
+local playerSprite
 local BRICK_W=20
 local BRICK_H=50
 local W_LEN=20
@@ -46,31 +47,6 @@ local size_x=display.contentWidth / W_LEN
 local size_y=display.contentHeight / W_LEN
 
 local speedOvni=50
-
---matrcie de level
--- value 1 - objet fixe
- -- levels[1] =  {
-	-- 					{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0},
- --                        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,0,1,2,0,0,0,0,0,0,0,0,0,0,0,1,0},
- --                        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0},
- --                        {0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,0,1,0,0,1,2,0,0,0,0,0,0,0,1,0,0},
- --                        {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- --                        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
- --                  }
 
 	local blocs = display.newGroup()
 
@@ -101,6 +77,7 @@ local function clearPath()
 		--reset/clear follow module items (remove these lines if not using "follow.lua")
 		transition.cancel( "moveObject" )
 		--if ( followModule.obj ) then display.remove( followModule.obj ) ; followModule.obj = nil end
+		--suppression du trace 
 		if ( followModule.ppg ) then
 			for p = followModule.ppg.numChildren,1,-1 do display.remove( followModule.ppg[p] ) end
 		end
@@ -211,15 +188,17 @@ local function drawPath( event, start )
 		
 		--start follow module
 		if ( #pathPoints > 1 ) then
-			followModule.init( followParams, pathPoints, pathPrecision, anchorPoints[1],follower )
+			followModule.init( followParams, pathPoints, pathPrecision, anchorPoints[1],follower,playerSprite )
 			--physics.addBody (followModule.obj, "dynamic", {bounce=0.8})
 
 			startx = anchorPoints[2].x
 			starty = anchorPoints[2].y
 			anchorPoints[1].x = startx
 			anchorPoints[1].y = starty
+			playerSprite:toFront()
 			--for i = #pathPoints,1,-1 do pathPoints[i] = nil end
 		end
+		--playerSprite.toFront()
 		if distFinish < 20 then
 				print ("ARRIVEE !!!!")
 
@@ -269,7 +248,12 @@ local function blocCollision(event)
 							x = pathPoints[caseprec].x,
 							y = pathPoints[caseprec].y
 				})
-		  		
+		  		transition.to( playerSprite, {
+							tag = "rebondObject",
+							x = pathPoints[caseprec].x,
+							y = pathPoints[caseprec].y
+				})
+				
    				
    		 	end
 				
@@ -434,12 +418,15 @@ function scene:create( event )
 	}
 
 	--local follower = display.newPolygon( 0, 0, { 0,-28, 30,28, 0,20, -30,28 } )
+	follower = display.newCircle(0,-15,10)
 	local playerSheet =  graphics.newImageSheet( "sprite_all.png", playerTable )
 
 	--creation du sprite
-	follower = display.newSprite( playerSheet, sequenceData ) 
+	playerSprite = display.newSprite( playerSheet, sequenceData ) 
+	playerSprite.x=-15
 	follower.x= -15
 	follower.name = "player"
+	follower.alpha=0.1
 
 	physics.addBody (follower, {bounce=0.8},{filter=playerCollisionFilter})
 	follower.isSleepingAllowed = false
@@ -465,7 +452,7 @@ function scene:didEnter( event )
   	local sceneGroup = self.view
 	
   
-   anchorPoints[1] = display.newCircle( startx, starty, 20 )
+   anchorPoints[1] = display.newCircle( startx, starty, 15 )
    display.currentStage:addEventListener( "touch", drawPath )  
    follower:addEventListener( 'collision', blocCollision )
     

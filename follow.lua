@@ -17,14 +17,15 @@ end
 
 
 
-local function follow( params, obj, pathPoints, pathPrecision )
+local function follow( params, obj, pathPoints, pathPrecision,objSprite )
 
 	local function nextTransition()
 
 		if ( obj.nextPoint > #pathPoints or isFollowing == 0) then
 			print( "follow FINISHED "..obj.nextPoint.." pathPoints:"..#pathPoints )
-				obj:pause()
+				objSprite:pause()
 			isFollowing = 0	
+			transition.cancel( "moveSprite" )
 			transition.cancel( "moveObject" )
 		else
 			--print ("isFollowing "..isFollowing)
@@ -43,14 +44,20 @@ local function follow( params, obj, pathPoints, pathPrecision )
 			
 			--transition along segment
 			
-				obj:setSequence( "run" ) 
-				obj:play()
+				objSprite:setSequence( "run" ) 
+				objSprite:play()
 				transition.to( obj, {
 					tag = "moveObject",
 					time = transTime,
 					x = pathPoints[obj.nextPoint].x,
 					y = pathPoints[obj.nextPoint].y,
 					onComplete = nextTransition
+				})
+				transition.to( objSprite, {
+					tag = "moveSprite",
+					time = transTime,
+					x = pathPoints[obj.nextPoint].x,
+					y = pathPoints[obj.nextPoint].y
 				})
 		
 
@@ -66,13 +73,13 @@ end
 
 
 
-function M.init( params, pathPoints, pathPrecision, startPoint ,follower)
+function M.init( params, pathPoints, pathPrecision, startPoint ,follower,objsprite)
 
 	isFollowing = 1
 
 	
 	--follower:setFillColor( 1 )
-	follower.xScale, follower.yScale = 2, 2
+	objsprite.xScale, objsprite.yScale = 2,2
 	follower.x = startPoint.x
 	follower.y = startPoint.y
 
@@ -88,9 +95,11 @@ function M.init( params, pathPoints, pathPrecision, startPoint ,follower)
 		precision = distBetween( pathPoints[1].x, pathPoints[1].y, pathPoints[2].x, pathPoints[2].y )
 	end
 	
-	--if "showPoints" is true, plot points along path
+	--Si ShowPoints, Affichage des point sur le trace
+	-- stokage des points affiche dans ppg
 	if ( params.showPoints == true ) then
-		local pathPointsGroup = display.newGroup() ; pathPointsGroup:toBack()
+		local pathPointsGroup = display.newGroup() ; 
+		pathPointsGroup:toBack()
 		for p = 1,#pathPoints do
 			local dot = display.newCircle( pathPointsGroup, 0, 0, 8 )
 			dot:setFillColor( 1, 1, 1, 0.4 )
@@ -100,7 +109,8 @@ function M.init( params, pathPoints, pathPrecision, startPoint ,follower)
 		M.ppg = pathPointsGroup
 	end
 
-	follow( params, follower, pathPoints, precision )
+	--declenche animation du parcours
+	follow( params, follower, pathPoints, precision,objsprite )
 
 
 end
