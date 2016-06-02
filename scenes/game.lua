@@ -3,6 +3,9 @@ local composer = require( "composer" )
 
 local scene = composer.newScene()
 local physics = require "physics"
+
+local clock = require('classes.clockTimer')
+
 physics.start()
 
 physics.setGravity(0, 0) 
@@ -47,7 +50,7 @@ local size_x=display.contentWidth / W_LEN
 local size_y=display.contentHeight / W_LEN
 
 local speedOvni=50
-
+local countDownTimer
 	local blocs = display.newGroup()
 
 local playerCollisionFilter = { categoryBits=1, maskBits=6 } --collision avec brick(2) et ovni(4)
@@ -81,8 +84,37 @@ local function clearPath()
 		if ( followModule.ppg ) then
 			for p = followModule.ppg.numChildren,1,-1 do display.remove( followModule.ppg[p] ) end
 		end
+
+		-- reinit clockTimer
+		if clock.millisecondsLeft<=0 then 
+			clock.millisecondsLeft=25000
+			countDownTimer=nil
+			countDownTimer=timer.performWithDelay( 100, checkTimer ,260 ) 
+		end
+		
 end
 
+
+local function animation(event)
+		if ( leadingSegment ) then display.remove( leadingSegment ) end
+
+		local distFinish=distanceBetween(event,arrivee) 
+		
+		--start follow module
+		if ( #pathPoints > 1 ) then
+			followModule.init( followParams, pathPoints, pathPrecision, anchorPoints[1],follower,playerSprite )
+		
+			startx = anchorPoints[2].x
+			starty = anchorPoints[2].y
+			anchorPoints[1].x = startx
+			anchorPoints[1].y = starty
+			playerSprite:toFront()
+		
+		end
+		if distFinish < 20 then
+				print ("ARRIVEE !!!!")
+		end
+end
 
 --fonction tracage du chemin - appel suite a evenement move
 -- phase 1 - init
@@ -176,35 +208,19 @@ local function drawPath( event, start )
 	 print ("Relachement draw path "..event.phase)
 		pathPoints[#pathPoints+1] = { x=event.x, y=event.y }
 		-- poitn arrivee devient le prochin pt de depart si non arrive
-		
-		print ("nb point à suivre"..#pathPoints)
+	   print ("nb point à suivre"..#pathPoints)
 
 		
-		
-		if ( leadingSegment ) then display.remove( leadingSegment ) end
 		if ( path and path.x and #pathPoints > 2 ) then path:append( event.x, event.y ) end
 
-		local distFinish=distanceBetween(event,arrivee) 
-		
-		--start follow module
-		if ( #pathPoints > 1 ) then
-			followModule.init( followParams, pathPoints, pathPrecision, anchorPoints[1],follower,playerSprite )
-			--physics.addBody (followModule.obj, "dynamic", {bounce=0.8})
+		animation(event)
 
-			startx = anchorPoints[2].x
-			starty = anchorPoints[2].y
-			anchorPoints[1].x = startx
-			anchorPoints[1].y = starty
-			playerSprite:toFront()
-			--for i = #pathPoints,1,-1 do pathPoints[i] = nil end
-		end
-		--playerSprite.toFront()
-		if distFinish < 20 then
-				print ("ARRIVEE !!!!")
-
-		end
 	end
 
+	if isMovedAvailable==0 and event.phase ~= "began" then
+		print("Animation forced")
+		animation(event)
+	end
 	return true
 end
 
@@ -260,7 +276,7 @@ local function blocCollision(event)
 	elseif event.phase == "ended" then
 	-- pathPoints[#pathPoints].x = anchorPoints[1].x 
 	-- pathPoints[#pathPoints].y = anchorPoints[1].y 
-	print ("collision ended "..#pathPoints)
+	-- print ("collision ended "..#pathPoints)
 	clearPath()
 	--clearPath()
 	end
@@ -273,7 +289,7 @@ end
 -- gestion de la colision ovni avec un bloc
 local function ovniCollision(event)
 	if event.phase== 'began' then
-		print ("ovni collision began de "..event.target.name.." avec "..event.other.name)
+		-- print ("ovni collision began de "..event.target.name.." avec "..event.other.name)
 		if event.other.name == 'brick'  then
 		 		 --print("colision avec "..event.other.name)
 		 		-- local vx, vy = event.target:getLinearVelocity()
@@ -367,6 +383,14 @@ function reinitFollower()
 
 end
 
+local function checkTimer()
+	if clock.millisecondsLeft <= 0 then 
+		isMovedAvailable=0
+		print(" AIE AIE fin TIMER !!!!!")
+	end
+
+	return clock:updateTime()
+end
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 -- "scene:create()"
@@ -377,7 +401,7 @@ function scene:create( event )
 	self.level = require('levels.' .. self.levelId)
 
 	-- clear path
-	clearPath()
+	--clearPath()
 	--objet depart
 
 
@@ -433,6 +457,17 @@ function scene:create( event )
 	
 	 
 	 follower.gravityScale=0
+
+     --ajout du timer
+     clock.newTimer({
+     					durationPreparation=25000,
+     					x=display.contentCenterX,
+     					y=1,
+     					size=60
+     				})
+     --clock.clockText:setfillcolor(0.7,0.7,1)
+    
+
 end
 
 
@@ -455,6 +490,7 @@ function scene:didEnter( event )
    anchorPoints[1] = display.newCircle( startx, starty, 15 )
    display.currentStage:addEventListener( "touch", drawPath )  
    follower:addEventListener( 'collision', blocCollision )
+     countDownTimer = timer.performWithDelay( 100, checkTimer ,260 ) 
     
 end
 
