@@ -65,6 +65,16 @@ local function distanceBetween( point1, point2 )
 end
 
 
+local function checkTimer()
+	print("checkTimer")
+	if clock.millisecondsLeft <= 0 then 
+		isMovedAvailable=0
+		print(" AIE AIE fin TIMER !!!!!")
+	end
+
+	return clock:updateTime()
+end
+
 --Fonction de reinit du chemin et du trace
 -- suppression des points et des segments utilises
 -- supression de la transition
@@ -87,15 +97,26 @@ local function clearPath()
 
 		-- reinit clockTimer
 		if clock.millisecondsLeft<=0 then 
+			print("reinit timer .......")
+			clock.clockText.text=" "
 			clock.millisecondsLeft=25000
-			countDownTimer=nil
-			countDownTimer=timer.performWithDelay( 100, checkTimer ,260 ) 
+			--local myClosure = function() return spawnBall( randomPosition ) end
+			countDownTimer = timer.performWithDelay( 100, checkTimer ,250 ) 
+			print("ms: " ..clock.millisecondsLeft)
+			print("time "..clock.timeDisplay)
+			print("text "..clock.clockText.text)
+			-- countDownTimer=nil
+			
 		end
 		
 end
 
 
 local function animation(event)
+		timer.cancel(countDownTimer)
+
+		clock.clockText.text="good luck "
+
 		if ( leadingSegment ) then display.remove( leadingSegment ) end
 
 		local distFinish=distanceBetween(event,arrivee) 
@@ -140,6 +161,8 @@ local function drawPath( event, start )
 	end
 	if ( event.phase == "began" ) then
 		print ("draw path "..event.phase)
+		clock.millisecondsLeft=25000
+		countDownTimer = timer.performWithDelay( 100, checkTimer ,250 ) 
 		clearPath()
 		print ("Path point START "..#pathPoints)
 
@@ -382,15 +405,6 @@ function reinitFollower()
 	follower:setLinearVelocity( 0, 0 )
 
 end
-
-local function checkTimer()
-	if clock.millisecondsLeft <= 0 then 
-		isMovedAvailable=0
-		print(" AIE AIE fin TIMER !!!!!")
-	end
-
-	return clock:updateTime()
-end
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 -- "scene:create()"
@@ -490,7 +504,7 @@ function scene:didEnter( event )
    anchorPoints[1] = display.newCircle( startx, starty, 15 )
    display.currentStage:addEventListener( "touch", drawPath )  
    follower:addEventListener( 'collision', blocCollision )
-     countDownTimer = timer.performWithDelay( 100, checkTimer ,260 ) 
+     
     
 end
 

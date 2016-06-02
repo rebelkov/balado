@@ -22,6 +22,7 @@ function _M.newTimer(params)
 end
 
 function _M.updateTime()
+	print("updateTime")
 	-- decrement the number of seconds
 	_M.millisecondsLeft = _M.millisecondsLeft - _M.dureeCycle
 	_M.timeDisplay=getDisplayTime(_M.millisecondsLeft)
