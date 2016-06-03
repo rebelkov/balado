@@ -6,6 +6,9 @@ local physics = require "physics"
 
 local clock = require('classes.clockTimer')
 
+local bestParcours = require('classes.bestParcours')
+
+
 physics.start()
 
 physics.setGravity(0, 0) 
@@ -46,16 +49,23 @@ local BRICK_H=50
 local W_LEN=20
 print ("Width "..display.contentWidth)
 print ("Height "..display.contentHeight)
-local size_x=display.contentWidth / W_LEN
+local size_x= (display.contentWidth - 30) / W_LEN
 local size_y=display.contentHeight / W_LEN
 
 local speedOvni=50
 local countDownTimer
-	local blocs = display.newGroup()
+local blocs = display.newGroup()
 
 local playerCollisionFilter = { categoryBits=1, maskBits=6 } --collision avec brick(2) et ovni(4)
 local brikCollisionFilter = { categoryBits=2, maskBits=5 } --collision avec player(1) et ovni (4)
 local ovniCollisionFilter = { categoryBits=4, maskBits=3 } --collision avec brick(2) et player(1)
+
+
+local depart_x 
+local depart_y
+local finish_x
+local finish_y
+
 
 --function pour calculer la distance entre deux points
 local function distanceBetween( point1, point2 )
@@ -393,6 +403,23 @@ function buildLevel(level)
             	ovni:addEventListener( 'collision', ovniCollision )
             	blocs.insert(blocs,ovni)
             end
+            if(level[i][j] == 8) then
+            	print("entree ".. size_x*j..","..size_y*i)
+            	depart_x=j
+            	depart_y=i
+  				entree = display.newCircle( size_x*j, size_y*i, 20 )
+
+				entree:setFillColor(1)
+
+            end
+            if(level[i][j] == 9) then
+            	print("arrivee ".. size_x*j..","..size_y*i)
+            	finish_x=j
+            	finish_y=i
+				arrivee = display.newCircle( size_x*j, size_y*i, 20 )
+				arrivee:setFillColor(1)
+	
+            end
         end
     end
 end
@@ -414,26 +441,13 @@ function scene:create( event )
 	print('level '..self.levelId)
 	self.level = require('levels.' .. self.levelId)
 
-	-- clear path
-	--clearPath()
-	--objet depart
-
-
-
-	entree = display.newCircle( startx, starty, 20 )
-	entree:setFillColor(1)
-
-	sceneGroup:insert(entree)
-
-	arrivee = display.newCircle( endx, endy, 20 )
-	arrivee:setFillColor(1)
-	sceneGroup:insert(arrivee)
-	sceneGroup.isVisible = true
-
-
+	
+-- constrcution du niveau (bloc, trou, entree, arrivee)
 	buildLevel(self.level.blocs)
 	
-
+sceneGroup:insert(entree)
+sceneGroup:insert(arrivee)
+	sceneGroup.isVisible = true
 	-- bloc=display.newRect(120,220,20,20)
 	
 	-- physics.addBody (bloc, "static", {bounce=2})
@@ -462,7 +476,9 @@ function scene:create( event )
 	--creation du sprite
 	playerSprite = display.newSprite( playerSheet, sequenceData ) 
 	playerSprite.x=-15
+	playerSprite.y=entree.y
 	follower.x= -15
+	follower.y=entree.y
 	follower.name = "player"
 	follower.alpha=0.1
 
@@ -481,6 +497,9 @@ function scene:create( event )
      				})
      --clock.clockText:setfillcolor(0.7,0.7,1)
     
+    bestParcours.calculParcours(self.level.blocs,{pos1_x=depart_x,pos1_y=depart_y,
+    												pos2_x=finish_x,pos2_y=finish_y
+    												})
 
 end
 
@@ -501,7 +520,7 @@ function scene:didEnter( event )
   	local sceneGroup = self.view
 	
   
-   anchorPoints[1] = display.newCircle( startx, starty, 15 )
+   anchorPoints[1] = display.newCircle( entree.x, entree.y, 15 )
    display.currentStage:addEventListener( "touch", drawPath )  
    follower:addEventListener( 'collision', blocCollision )
      
