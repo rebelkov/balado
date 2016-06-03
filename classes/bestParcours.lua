@@ -55,15 +55,15 @@ local function getPathPoint(path)
 		node.y=math.floor(node.y*size_y)
 	
 		if k > 1  then
-			local nbintermediaire=math.floor(distanceBetween(node,prec) / W_LEN) +1	
+			local nbintermediaire=math.floor(distanceBetween(node,prec) / 30) +1	
 			print("nb intermdire "..nbintermediaire)	
 			for p=2,nbintermediaire,1 do
-				local intervalle_x=math.abs(node.x - prec.x)
-				local intervalle_y=math.abs(node.y - prec.y)
+				local intervalle_x=node.x - prec.x
+				local intervalle_y=node.y - prec.y
 				print("intervalle "..intervalle_x..","..intervalle_y)
 				nodetmp=createNode(math.floor(prec.x + (intervalle_x * (p-1)/nbintermediaire)),math.floor(prec.y + (intervalle_y * (p-1)/nbintermediaire)))
 				
-				print (" node "..prec.x..","..prec.y)
+				print (" prec to node  "..prec.x..","..prec.y.." to "..node.x..","..node.y)
 				print (" + "..intervalle_x * (p-1)/nbintermediaire.. ","..intervalle_y * (p-1)/nbintermediaire)
 				print(" coordonnee "..nodetmp.x..","..nodetmp.y)
 				table.insert(listOfPoints,nodetmp)
