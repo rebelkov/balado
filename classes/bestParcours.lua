@@ -45,8 +45,8 @@ end
 
 local function getPathPoint(path)
 	local listOfPoints = {}
-	local prec_x
-	local prec_y
+	local prec={}
+	
 	local createNode  = require ('libs.node')
 	local nodetmp={}
 
@@ -55,20 +55,26 @@ local function getPathPoint(path)
 		node.y=math.floor(node.y*size_y)
 	
 		if k > 1  then
-					
-			nodetmp=createNode(math.floor((node.x + prec_x)/2),math.floor((node.y +  prec_y)/2))
-			table.insert(listOfPoints,nodetmp)
+			local nbintermediaire=math.floor(distanceBetween(node,prec) / W_LEN) +1	
+			print("nb intermdire "..nbintermediaire)	
+			for p=2,nbintermediaire,1 do
+				local intervalle_x=math.abs(node.x - prec.x)
+				local intervalle_y=math.abs(node.y - prec.y)
+				print("intervalle "..intervalle_x..","..intervalle_y)
+				nodetmp=createNode(math.floor(prec.x + (intervalle_x * (p-1)/nbintermediaire)),math.floor(prec.y + (intervalle_y * (p-1)/nbintermediaire)))
+				
+				print (" node "..prec.x..","..prec.y)
+				print (" + "..intervalle_x * (p-1)/nbintermediaire.. ","..intervalle_y * (p-1)/nbintermediaire)
+				print(" coordonnee "..nodetmp.x..","..nodetmp.y)
+				table.insert(listOfPoints,nodetmp)
+			end
 			
 		end
 		table.insert(listOfPoints,node)
-		prec_x=node.x
-		prec_y=node.y
+		prec=createNode(node.x,node.y)
 	end
 
-	for k, node in ipairs(listOfPoints) do
-		 print(('step:%d, x: %d, y: %d'):format(k, node.x, node.y))
-
-	end
+	return listOfPoints
 end
 
 function _M.calculParcours(map,parcours)
@@ -89,7 +95,7 @@ print("parcours ".."("..parcours.pos1_x..","..parcours.pos1_y..") to ("..parcour
 	
 	--printInfo(grid, p, cost, 'path')
 
-getPathPoint(p)
+  _M.listOfPoints=getPathPoint(p)
 
 	_M.path = p
 	_M.cost= cost

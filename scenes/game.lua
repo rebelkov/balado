@@ -501,6 +501,13 @@ sceneGroup:insert(arrivee)
     												pos2_x=finish_x,pos2_y=finish_y
     												})
 
+
+    for k, node in ipairs(bestParcours.listOfPoints) do
+    	--print(('step:%d, x: %d, y: %d'):format(k, node.x, node.y))
+			local dot = display.newCircle( node.x,node.y, 8 )
+			dot:setFillColor( 1, 1, 1, 0.4 )
+    end
+
 end
 
 
