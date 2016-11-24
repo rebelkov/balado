@@ -56,16 +56,16 @@ local function getPathPoint(path)
 	
 		if k > 1  then
 			local nbintermediaire=math.floor(distanceBetween(node,prec) / 30) +1	
-			print("nb intermdire "..nbintermediaire)	
+			-- print("nb intermdire "..nbintermediaire)	
 			for p=2,nbintermediaire,1 do
 				local intervalle_x=node.x - prec.x
 				local intervalle_y=node.y - prec.y
-				print("intervalle "..intervalle_x..","..intervalle_y)
+				-- print("intervalle "..intervalle_x..","..intervalle_y)
 				nodetmp=createNode(math.floor(prec.x + (intervalle_x * (p-1)/nbintermediaire)),math.floor(prec.y + (intervalle_y * (p-1)/nbintermediaire)))
 				
-				print (" prec to node  "..prec.x..","..prec.y.." to "..node.x..","..node.y)
-				print (" + "..intervalle_x * (p-1)/nbintermediaire.. ","..intervalle_y * (p-1)/nbintermediaire)
-				print(" coordonnee "..nodetmp.x..","..nodetmp.y)
+				-- print (" prec to node  "..prec.x..","..prec.y.." to "..node.x..","..node.y)
+				-- print (" + "..intervalle_x * (p-1)/nbintermediaire.. ","..intervalle_y * (p-1)/nbintermediaire)
+				-- print(" coordonnee "..nodetmp.x..","..nodetmp.y)
 				table.insert(listOfPoints,nodetmp)
 			end
 			
@@ -80,10 +80,10 @@ end
 function _M.calculParcours(map,parcours)
 
 	grid.create(map)  -- We create the grid map
-	grid.passable = function(value) return value ~= 1 end -- values ~= 5 are passable
+	grid.passable = function(value) return value ~= 1  end -- values ~= 5 are passable
 	grid.diagonal = true  -- diagonal moves are disallowed (this is the default behavior)
-	grid.distance = grid.calculateManhattanDistance  -- We will use manhattan heuristic
-
+	--grid.distance = grid.calculateManhattanDistance  -- We will use manhattan heuristic
+grid.distance = grid.calculateDiagonalDistance
 
 print("parcours ".."("..parcours.pos1_x..","..parcours.pos1_y..") to ("..parcours.pos2_x..","..parcours.pos2_y..")")
 	local target = grid.getNode(parcours.pos2_x,parcours.pos2_y)

@@ -8,6 +8,8 @@ local clock = require('classes.clockTimer')
 
 local bestParcours = require('classes.bestParcours')
 
+local score = require('classes.score')
+
 
 physics.start()
 
@@ -47,8 +49,8 @@ local playerSprite
 local BRICK_W=20
 local BRICK_H=50
 local W_LEN=20
-print ("Width "..display.contentWidth)
-print ("Height "..display.contentHeight)
+-- print ("Width "..display.contentWidth)
+-- print ("Height "..display.contentHeight)
 local size_x= (display.contentWidth - 30) / W_LEN
 local size_y=display.contentHeight / W_LEN
 
@@ -66,6 +68,10 @@ local depart_y
 local finish_x
 local finish_y
 
+local aff_score
+local aff_ptarret
+local brouillard = {}
+local withBrouillard=false
 
 --function pour calculer la distance entre deux points
 local function distanceBetween( point1, point2 )
@@ -107,15 +113,10 @@ local function clearPath()
 
 		-- reinit clockTimer
 		if clock.millisecondsLeft<=0 then 
-			print("reinit timer .......")
+			-- print("reinit timer .......")
 			clock.clockText.text=" "
 			clock.millisecondsLeft=25000
-			--local myClosure = function() return spawnBall( randomPosition ) end
 			countDownTimer = timer.performWithDelay( 100, checkTimer ,250 ) 
-			print("ms: " ..clock.millisecondsLeft)
-			print("time "..clock.timeDisplay)
-			print("text "..clock.clockText.text)
-			-- countDownTimer=nil
 			
 		end
 		
@@ -144,7 +145,13 @@ local function animation(event)
 		end
 		if distFinish < 20 then
 				print ("ARRIVEE !!!!")
+				aff_score.text=score.nbpoint.."/"..score.nbpointCible
+				aff_ptarret.text=score.nbarret
+				
+		else 
+			score.nbarret=score.nbarret + 1
 		end
+
 end
 
 --fonction tracage du chemin - appel suite a evenement move
@@ -169,12 +176,13 @@ local function drawPath( event, start )
 	if (isFollowing == 1) then
 		return true
 	end
+	local bx,by
 	if ( event.phase == "began" ) then
-		print ("draw path "..event.phase)
+		-- print ("draw path "..event.phase)
 		clock.millisecondsLeft=25000
 		countDownTimer = timer.performWithDelay( 100, checkTimer ,250 ) 
 		clearPath()
-		print ("Path point START "..#pathPoints)
+		-- print ("Path point START "..#pathPoints)
 
 		local distStart=distanceBetween(event,anchorPoints[1]) 
 		
@@ -190,6 +198,32 @@ local function drawPath( event, start )
 			anchorPoints[1]:setFillColor( 0.2, 0.8, 0.4 )
 			display.getCurrentStage():setFocus( anchorPoints[1] )
 			pathPoints[#pathPoints+1] = { x=startx, y=starty }
+			  -- for j = 1, 2 do
+			  -- 	brouillard
+			  -- end
+
+			  -- pos=(math.round(startx / size_x)+1) * (math.round(starty / size_y)+1)
+			  --print ("position "..startx.."/"..starty.."/")
+
+			  print (" coord "..math.round(startx / size_x).."/"..math.round(starty / size_y))
+			  bx=math.round(starty / size_y)
+			  by=math.round(startx / size_x)
+			  if bx < 18 and withBrouillard then
+ 				brouillard[bx][by].alpha=0
+ 				brouillard[bx][by+1].alpha=0.2
+ 				brouillard[bx+1][by+1].alpha=0.2
+ 				brouillard[bx+1][by].alpha=0.2
+ 				brouillard[bx+1][by+2].alpha=0.4
+ 				brouillard[bx+2][by+2].alpha=0.4
+ 				brouillard[bx+2][by+1].alpha=0.4
+ 				
+ 				
+			  end
+			 --  brouillard[pos].alpha=0.1
+			 --  brouillard[pos-1].alpha=0.1
+				-- brouillard[pos-2].alpha=0.1
+			
+
 		end
 	elseif ( event.phase == "moved" and isMovedAvailable == 1) then
 		
@@ -201,7 +235,7 @@ local function drawPath( event, start )
 		--create end point object for visualization
 		if not ( anchorPoints[2].x ) then
 			anchorPoints[2] = display.newCircle( event.x, event.y, 20 )
-			anchorPoints[2]:setFillColor( 1, 0, 0.2 )
+			anchorPoints[2]:setFillColor( 0.5, 0.5, 0.2 )
 		end
 		
 		--affiche trace : cache premier point derriere cercle
@@ -211,19 +245,40 @@ local function drawPath( event, start )
 		if isDragAvailable == 1 then
 			if ( #pathPoints < 2 ) then
 				if ( path ) then display.remove( path ) end
-				print("pervious "..previousPoint.y)
+				-- print("pervious "..previousPoint.y)
 				path = display.newLine( previousPoint.x, previousPoint.y, event.x, event.y )
-				path:setStrokeColor( 0.5, 1, 1 )
+				path:setStrokeColor( 0.5, 0.5, 1 )
 				path.strokeWidth = 4
-				path:toBack()
-			else
-				-- path:setStrokeColor( 0.5, 0.5, 0.5 )
-				-- if ( leadingSegment ) then display.remove( leadingSegment ) end
-				-- leadingSegment = display.newLine( previousPoint.x, previousPoint.y, event.x, event.y )
-				-- leadingSegment:setStrokeColor( 1, 1, 1 )
-				-- leadingSegment.strokeWidth = 4
-				-- leadingSegment:toBack()
+				--path:toBack()
+				path:toFront()
+			
 			end
+
+			  bx=math.round(event.y / size_y)
+			  by=math.round(event.x / size_x)
+			  print(" nuage "..bx.."/"..by)
+			  brouillard[bx][by].alpha=0
+
+	
+ 				brouillard[bx][by+1].alpha=0
+ 				brouillard[bx+1][by+1].alpha=0
+ 				brouillard[bx+1][by].alpha=0
+ 				brouillard[bx+1][by+2].alpha=0
+ 				brouillard[bx+2][by+2].alpha=0
+ 				brouillard[bx+2][by+1].alpha=0
+
+ 				
+ 			 if bx > 1  and by > 1  then
+			  	brouillard[bx-1][by].alpha=0
+			  	brouillard[bx-1][by+1].alpha=0
+			  	brouillard[bx-1][by-1].alpha=0
+			  end
+ 				
+			  if bx > 2  and by > 2  then
+			  	brouillard[bx-2][by].alpha=0
+			  	brouillard[bx-2][by+1].alpha=0
+			  	brouillard[bx-2][by-1].alpha=0
+			  end
 		end
 
 		--move end point in unison with touch
@@ -238,20 +293,23 @@ local function drawPath( event, start )
 
 		--fin du deplacement - following
 	elseif ( (event.phase == "ended" or event.phase == "cancelled") and isMovedAvailable ==1 ) then
-	 print ("Relachement draw path "..event.phase)
+	 -- print ("Relachement draw path "..event.phase)
 		pathPoints[#pathPoints+1] = { x=event.x, y=event.y }
 		-- poitn arrivee devient le prochin pt de depart si non arrive
-	   print ("nb point à suivre"..#pathPoints)
+	   -- print ("nb point à suivre"..#pathPoints)
 
 		
 		if ( path and path.x and #pathPoints > 2 ) then path:append( event.x, event.y ) end
 
+		score.nbpoint=score.nbpoint + #pathPoints
+		aff_score.text=score.nbpoint.."/"..score.nbpointCible
 		animation(event)
 
 	end
 
 	if isMovedAvailable==0 and event.phase ~= "began" then
-		print("Animation forced")
+		-- print("Animation forced")
+		score.nbarret=score.nbarret + 1
 		animation(event)
 	end
 	return true
@@ -268,7 +326,7 @@ end
 -- gestion de la colision du player avec un bloc
 local function blocCollision(event)
 	
-	print ("Collision "..event.phase)
+	-- print ("Collision "..event.phase)
 	if event.phase== 'began' then
 			local nbcase_rebond=3
 			if (follower.nextPoint <= nbcase_rebond) then
@@ -276,8 +334,7 @@ local function blocCollision(event)
 			end 
 			local caseprec=follower.nextPoint-nbcase_rebond
 			isFollowing = 0
-			print ("Debut colision au point "..follower.nextPoint .." / "..#pathPoints)
-			print ("je vais reculer de "..nbcase_rebond.." cases");
+			
 			if (nbcase_rebond > 0 and #pathPoints > 0 and #pathPoints > caseprec ) then
 				anchorPoints[1].x = pathPoints[caseprec].x
 				anchorPoints[1].y = pathPoints[caseprec].y
@@ -286,11 +343,9 @@ local function blocCollision(event)
 
 			startx=anchorPoints[1].x
 			starty=anchorPoints[1].y
-			print ("anchorPoints[1] "..anchorPoints[1].x.."/"..anchorPoints[1].y)
-			print ("pathPoint precedent "..follower.nextPoint.. " / "..#pathPoints)
 			
 		 	if (#pathPoints > caseprec and caseprec > 0 ) then
-		  		print ("je recule de "..nbcase_rebond.." cases  "..pathPoints[caseprec].x.. " / "..pathPoints[caseprec].y)
+		  		-- print ("je recule de "..nbcase_rebond.." cases  "..pathPoints[caseprec].x.. " / "..pathPoints[caseprec].y)
 		  		transition.cancel("rebondObject")
 		  		transition.to( follower, {
 							tag = "rebondObject",
@@ -305,11 +360,11 @@ local function blocCollision(event)
 				
    				
    		 	end
+
+   		 	score.nbarret=score.nbarret + 1
 				
 	elseif event.phase == "ended" then
-	-- pathPoints[#pathPoints].x = anchorPoints[1].x 
-	-- pathPoints[#pathPoints].y = anchorPoints[1].y 
-	-- print ("collision ended "..#pathPoints)
+	
 	clearPath()
 	--clearPath()
 	end
@@ -324,13 +379,7 @@ local function ovniCollision(event)
 	if event.phase== 'began' then
 		-- print ("ovni collision began de "..event.target.name.." avec "..event.other.name)
 		if event.other.name == 'brick'  then
-		 		 --print("colision avec "..event.other.name)
-		 		-- local vx, vy = event.target:getLinearVelocity()
-		 		-- if vy == 0 then
-		 		-- 	 event.target:setLinearVelocity(event.target.speed, 0 )
-		 		-- else
-		 		-- 	 event.target:setLinearVelocity(0 , event.target.speed )
-		 		-- end
+		 		
 		 		 event.target:setLinearVelocity(event.target.speed, 0 )
 		 		 event.target.speed = - event.target.speed
 		 		 return true
@@ -354,18 +403,45 @@ end
 --creation du level 
 --  creation des brik et bloc selon matrice de level
 function buildLevel(level)
-
+	local blocTable = { 
+		width = 32,
+		height = 32, 
+		numFrames = 240,
+		sheetContentWidth=512,
+		sheetContentHeight=480
+	}
+	
+	local blocSheet = graphics.newImageSheet( "images/fond2.png", blocTable )
     -- Level length, height
 
     local len = table.maxn(level)
 
-    blocs:toFront()
+    for   i = 1  , len +5 do
+    	brouillard[i]={}
+        for j = 1  , W_LEN +5 do
+        	  brouillard[i][j]=display.newRect(120,220,size_x,size_y)
+            		print("new cx "..i.." "..j)
+            		brouillard[i][j].x = size_x*j
+            		brouillard[i][j].y = size_y*i
+            		brouillard[i][j]:setFillColor( 1, 0, 0 )
+            		brouillard[i][j].alpha= 0
+        end
+     end
 
     for i = 1, len do
+    	
         for j = 1, W_LEN do
+        	 if(level[i][j] == 0 or level[i][j]==2) then
+				local passage=display.newImageRect( blocSheet, 192, size_x, size_y )
+				 passage.x = size_x*j 
+                passage.y = size_y*i
+                passage:toBack()
+        	 end
             if(level[i][j] == 1) then
                 --local brick = display.newImage('brick.png')
-                  local brick=display.newRect(120,220,size_x,size_y)
+                  local brick=display.newImageRect( blocSheet, 201, size_x, size_y )
+                  
+                
                 brick.name = 'brick'
                 brick.x = size_x*j 
                 brick.y = size_y*i
@@ -374,8 +450,8 @@ function buildLevel(level)
                 blocs.insert(blocs, brick)
             end
             if(level[i][j] == 2) then
-            	local ovni=display.newRect(120,220,size_x,size_y)
-
+            	--local ovni=display.newRect(120,220,size_x,size_y)
+ 				local ovni=display.newImageRect( blocSheet, 196, size_x, size_y )
             	ovni.name = 'ovni'
             	ovni.x = size_x*j
             	ovni.y = size_y*i
@@ -388,40 +464,51 @@ function buildLevel(level)
             	ovni:addEventListener( 'collision', ovniCollision )
             	blocs.insert(blocs,ovni)
             end
-            if(level[i][j] == 3) then
-            	local ovni=display.newRect(120,220,size_x,size_y)
-
-            	ovni.name = 'ovni'
-            	ovni.x = size_x*j
-            	ovni.y = size_y*i
-            	physics.addBody(ovni,{density = 1, friction = 0, bounce = 0,filter=ovniCollisionFilter})
-            	ovni.bodyType = 'dynamic'
-            	ovni.gravityScale = 0
-            	speedOvni = math.random(50,100)
-            	ovni.speed = speedOvni
-            	ovni:setLinearVelocity( 0, speedOvni )
-            	ovni:addEventListener( 'collision', ovniCollision )
-            	blocs.insert(blocs,ovni)
-            end
+           
             if(level[i][j] == 8) then
-            	print("entree ".. size_x*j..","..size_y*i)
+            	--print("entree ".. size_x*j..","..size_y*i)
             	depart_x=j
             	depart_y=i
-  				entree = display.newCircle( size_x*j, size_y*i, 20 )
+  				-- entree = display.newCircle( size_x*j, size_y*i, 20 )
+  				-- entree:setFillColor(1)
+  				entree=display.newImageRect( "images/start.png",  size_x, size_y )
+  				entree.x=size_x*j
+  				entree.y=size_y*i
 
-				entree:setFillColor(1)
 
             end
             if(level[i][j] == 9) then
-            	print("arrivee ".. size_x*j..","..size_y*i)
+            	--print("arrivee ".. size_x*j..","..size_y*i)
             	finish_x=j
             	finish_y=i
-				arrivee = display.newCircle( size_x*j, size_y*i, 20 )
-				arrivee:setFillColor(1)
+				--arrivee = display.newCircle( size_x*j, size_y*i, 20 )
+				--arrivee:setFillColor(1)
+				arrivee=display.newImageRect( "images/finish1.png",  size_x, size_y )
+  				arrivee.x=size_x*j
+  				arrivee.y=size_y*i
 	
             end
+
+    		brouillard[i][j].x = size_x*j
+    		brouillard[i][j].y = size_y*i
+    		brouillard[i][j]:setFillColor( 1, 0, 0 )
+    		if withBrouillard then
+    			brouillard[i][j].alpha= 1
+    		end
+--print("cccx "..i.." "..j)
+            if(level[i][j] >7) then
+            	   
+            		brouillard[i][j].alpha= 0
+           
+
+            end
+
         end
     end
+
+    blocs:toFront()
+
+    
 end
 
 
@@ -441,10 +528,11 @@ function scene:create( event )
 	print('level '..self.levelId)
 	self.level = require('levels.' .. self.levelId)
 
-	
+	withBrouillard = self.level.withBrouillard
 -- constrcution du niveau (bloc, trou, entree, arrivee)
 	buildLevel(self.level.blocs)
 	
+
 sceneGroup:insert(entree)
 sceneGroup:insert(arrivee)
 	sceneGroup.isVisible = true
@@ -456,22 +544,22 @@ sceneGroup:insert(arrivee)
 	sceneGroup:insert(blocs)
 
 	local playerTable = { 
-		width = 32,
-		height = 32, 
-		numFrames = 736, 
-		sheetContentHeight = 736, 
-		sheetContentWidth = 1024
+		width = 38,
+		height = 30, 
+		numFrames = 16, 
+		sheetContentHeight = 120, 
+		sheetContentWidth = 152
 	}
 
 	local sequenceData = {
 		name = "run",
-		frames = { 1, 2},
+		frames = {13, 14},
 		time = 600 
 	}
 
 	--local follower = display.newPolygon( 0, 0, { 0,-28, 30,28, 0,20, -30,28 } )
 	follower = display.newCircle(0,-15,10)
-	local playerSheet =  graphics.newImageSheet( "sprite_all.png", playerTable )
+	local playerSheet =  graphics.newImageSheet( "images/voiture1.png", playerTable )
 
 	--creation du sprite
 	playerSprite = display.newSprite( playerSheet, sequenceData ) 
@@ -507,6 +595,12 @@ sceneGroup:insert(arrivee)
 			local dot = display.newCircle( node.x,node.y, 8 )
 			dot:setFillColor( 1, 1, 1, 0.4 )
     end
+
+    score.initScore()
+    score.nbpointCible=#bestParcours.listOfPoints
+
+    aff_score=display.newText("0".."/"..score.nbpointCible, 80, 1, native.systemFontBold, 60)
+	aff_ptarret=display.newText(score.nbarret, 700, 1, native.systemFontBold, 60)
 
 end
 

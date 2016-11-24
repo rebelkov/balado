@@ -1,6 +1,5 @@
 return {
 	map = 1,
-      withBrouillard = true,
 	ammo = {'normal', 'normal'},
 	 blocs =  {
 				{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},

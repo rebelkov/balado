@@ -40,6 +40,8 @@ local function follow( params, obj, pathPoints, pathPrecision,objSprite )
 			--rotate object to face next point
 			if ( obj.nextPoint < #pathPoints ) then
 				obj.rotation = angleBetween( obj.x, obj.y, pathPoints[obj.nextPoint].x, pathPoints[obj.nextPoint].y )
+				objSprite.rotation = obj.rotation 
+				--print ("rotation "..obj.rotation)
 			end
 			
 			--transition along segment
@@ -85,7 +87,7 @@ function M.init( params, pathPoints, pathPrecision, startPoint ,follower,objspri
 
 	print ("Init follow "..follower.x.."/"..follower.y)
 	follower.rotation = angleBetween( pathPoints[1].x, pathPoints[1].y, pathPoints[2].x, pathPoints[2].y )
-
+print ("rotation "..follower.rotation)
 
 	--add follower to module for reference
 	M.obj = follower
