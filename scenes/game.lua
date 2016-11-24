@@ -135,7 +135,7 @@ local function animation(event)
 		--start follow module
 		if ( #pathPoints > 1 ) then
 			followModule.init( followParams, pathPoints, pathPrecision, anchorPoints[1],follower,playerSprite )
-		
+			print('distance reel '..followModule.distancereel)
 			startx = anchorPoints[2].x
 			starty = anchorPoints[2].y
 			anchorPoints[1].x = startx

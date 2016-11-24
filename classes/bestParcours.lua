@@ -49,7 +49,8 @@ local function getPathPoint(path)
 	
 	local createNode  = require ('libs.node')
 	local nodetmp={}
-
+	local totaldistance=0
+	
 	for k, node in ipairs(path) do
 		node.x=math.floor(node.x*size_x)
 		node.y=math.floor(node.y*size_y)
@@ -57,6 +58,7 @@ local function getPathPoint(path)
 		if k > 1  then
 			local nbintermediaire=math.floor(distanceBetween(node,prec) / 30) +1	
 			-- print("nb intermdire "..nbintermediaire)	
+			totaldistance=totaldistance + math.floor(distanceBetween(node,prec))
 			for p=2,nbintermediaire,1 do
 				local intervalle_x=node.x - prec.x
 				local intervalle_y=node.y - prec.y
@@ -73,7 +75,7 @@ local function getPathPoint(path)
 		table.insert(listOfPoints,node)
 		prec=createNode(node.x,node.y)
 	end
-
+	listOfPoints.distance=totaldistance
 	return listOfPoints
 end
 
@@ -96,7 +98,7 @@ print("parcours ".."("..parcours.pos1_x..","..parcours.pos1_y..") to ("..parcour
 	--printInfo(grid, p, cost, 'path')
 
   _M.listOfPoints=getPathPoint(p)
-
+ print('distance total cible '.._M.listOfPoints.distance)
 	_M.path = p
 	_M.cost= cost
 

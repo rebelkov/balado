@@ -91,7 +91,8 @@ print ("rotation "..follower.rotation)
 
 	--add follower to module for reference
 	M.obj = follower
-	
+	M.distancereel=0
+	local distreel=0;
 	local precision = pathPrecision
 	if ( pathPrecision == 0 ) then
 		precision = distBetween( pathPoints[1].x, pathPoints[1].y, pathPoints[2].x, pathPoints[2].y )
@@ -107,8 +108,12 @@ print ("rotation "..follower.rotation)
 			dot:setFillColor( 1, 1, 1, 0.4 )
 			dot.x = pathPoints[p].x
 			dot.y = pathPoints[p].y
+			if (p >1 ) then
+				distreel=distreel+distBetween(pathPoints[p-1].x,pathPoints[p-1].y,pathPoints[p].x,pathPoints[p].y)
+			end
 		end
 		M.ppg = pathPointsGroup
+		M.distancereel=distreel
 	end
 
 	--declenche animation du parcours
