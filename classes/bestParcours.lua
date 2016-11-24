@@ -43,6 +43,7 @@ local function printInfo(grid, path, cost, msg)
 	print(('-'):rep(80))
 end
 
+--calcul coordonnee des point en focntion du path (case qui est fourni par W_LEN)
 local function getPathPoint(path)
 	local listOfPoints = {}
 	local prec={}
@@ -50,22 +51,29 @@ local function getPathPoint(path)
 	local createNode  = require ('libs.node')
 	local nodetmp={}
 
+	local totaldistance=0
 	for k, node in ipairs(path) do
+	
+	print("node en case "..node.x.." "..node.y);
+	
 		node.x=math.floor(node.x*size_x)
 		node.y=math.floor(node.y*size_y)
+		
+	--print("node en px "..node.x.." "..node.y);
 	
 		if k > 1  then
 			local nbintermediaire=math.floor(distanceBetween(node,prec) / W_LEN) +1	
-			print("nb intermdire "..nbintermediaire)	
+			totaldistance=totaldistance + math.floor(distanceBetween(node,prec))
+			--print("nb intermdire "..nbintermediaire)	
 			for p=2,nbintermediaire,1 do
-				local intervalle_x=math.abs(node.x - prec.x)
-				local intervalle_y=math.abs(node.y - prec.y)
-				print("intervalle "..intervalle_x..","..intervalle_y)
+				local intervalle_x=math.floor(node.x - prec.x)
+				local intervalle_y=math.floor(node.y - prec.y)
+				--print("intervalle "..intervalle_x..","..intervalle_y)
 				nodetmp=createNode(math.floor(prec.x + (intervalle_x * (p-1)/nbintermediaire)),math.floor(prec.y + (intervalle_y * (p-1)/nbintermediaire)))
 				
-				print (" node "..prec.x..","..prec.y)
-				print (" + "..intervalle_x * (p-1)/nbintermediaire.. ","..intervalle_y * (p-1)/nbintermediaire)
-				print(" coordonnee "..nodetmp.x..","..nodetmp.y)
+				--print (" node prec"..prec.x..","..prec.y)
+				--print (" + "..intervalle_x * (p-1)/nbintermediaire.. ","..intervalle_y * (p-1)/nbintermediaire)
+				--print(" coordonnee node "..nodetmp.x..","..nodetmp.y)
 				table.insert(listOfPoints,nodetmp)
 			end
 			
@@ -73,7 +81,7 @@ local function getPathPoint(path)
 		table.insert(listOfPoints,node)
 		prec=createNode(node.x,node.y)
 	end
-
+	listOfPoints.distance=totaldistance
 	return listOfPoints
 end
 
@@ -83,7 +91,7 @@ function _M.calculParcours(map,parcours)
 	grid.passable = function(value) return value ~= 1 end -- values ~= 5 are passable
 	grid.diagonal = true  -- diagonal moves are disallowed (this is the default behavior)
 	grid.distance = grid.calculateManhattanDistance  -- We will use manhattan heuristic
-
+--grid.distance = grid.calculateDiagonalDistance
 
 print("parcours ".."("..parcours.pos1_x..","..parcours.pos1_y..") to ("..parcours.pos2_x..","..parcours.pos2_y..")")
 	local target = grid.getNode(parcours.pos2_x,parcours.pos2_y)
@@ -94,9 +102,12 @@ print("parcours ".."("..parcours.pos1_x..","..parcours.pos1_y..") to ("..parcour
 	local p, cost = grid.findPath(start,target)
 	
 	--printInfo(grid, p, cost, 'path')
+	
+	print('nb de point best '..#p)
 
   _M.listOfPoints=getPathPoint(p)
 
+  print('distance total '.._M.listOfPoints.distance)
 	_M.path = p
 	_M.cost= cost
 

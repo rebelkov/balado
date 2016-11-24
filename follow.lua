@@ -89,6 +89,8 @@ function M.init( params, pathPoints, pathPrecision, startPoint ,follower,objspri
 
 	--add follower to module for reference
 	M.obj = follower
+	M.distancereel=0
+	distreel=0;
 	
 	local precision = pathPrecision
 	if ( pathPrecision == 0 ) then
@@ -100,13 +102,18 @@ function M.init( params, pathPoints, pathPrecision, startPoint ,follower,objspri
 	if ( params.showPoints == true ) then
 		local pathPointsGroup = display.newGroup() ; 
 		pathPointsGroup:toBack()
+		
 		for p = 1,#pathPoints do
 			local dot = display.newCircle( pathPointsGroup, 0, 0, 8 )
 			dot:setFillColor( 1, 1, 1, 0.4 )
 			dot.x = pathPoints[p].x
 			dot.y = pathPoints[p].y
+			if (p >1 ) then
+				distreel=distreel+distBetween(pathPoints[p-1].x,pathPoints[p-1].y,pathPoints[p].x,pathPoints[p].y)
+			end
 		end
 		M.ppg = pathPointsGroup
+		M.distancereel=distreel
 	end
 
 	--declenche animation du parcours

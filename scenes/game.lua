@@ -134,7 +134,7 @@ local function animation(event)
 		--start follow module
 		if ( #pathPoints > 1 ) then
 			followModule.init( followParams, pathPoints, pathPrecision, anchorPoints[1],follower,playerSprite )
-		
+		   print('distance reel '..followModule.distancereel)
 			startx = anchorPoints[2].x
 			starty = anchorPoints[2].y
 			anchorPoints[1].x = startx
@@ -192,9 +192,7 @@ local function drawPath( event, start )
 			pathPoints[#pathPoints+1] = { x=startx, y=starty }
 		end
 	elseif ( event.phase == "moved" and isMovedAvailable == 1) then
-		
-		--print ("draw path "..event.phase)
-
+	
 		local previousPoint = pathPoints[#pathPoints]
 		local dist = distanceBetween( previousPoint, event )
 
@@ -211,7 +209,6 @@ local function drawPath( event, start )
 		if isDragAvailable == 1 then
 			if ( #pathPoints < 2 ) then
 				if ( path ) then display.remove( path ) end
-				print("pervious "..previousPoint.y)
 				path = display.newLine( previousPoint.x, previousPoint.y, event.x, event.y )
 				path:setStrokeColor( 0.5, 1, 1 )
 				path.strokeWidth = 4
@@ -242,6 +239,8 @@ local function drawPath( event, start )
 		pathPoints[#pathPoints+1] = { x=event.x, y=event.y }
 		-- poitn arrivee devient le prochin pt de depart si non arrive
 	   print ("nb point à suivre"..#pathPoints)
+	   
+	   
 
 		
 		if ( path and path.x and #pathPoints > 2 ) then path:append( event.x, event.y ) end
