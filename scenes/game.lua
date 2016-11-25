@@ -420,7 +420,7 @@ function buildLevel(level)
     	brouillard[i]={}
         for j = 1  , W_LEN +5 do
         	  brouillard[i][j]=display.newRect(120,220,size_x,size_y)
-            		print("new cx "..i.." "..j)
+            		--print("new cx "..i.." "..j)
             		brouillard[i][j].x = size_x*j
             		brouillard[i][j].y = size_y*i
             		brouillard[i][j]:setFillColor( 1, 0, 0 )
@@ -431,13 +431,15 @@ function buildLevel(level)
     for i = 1, len do
     	
         for j = 1, W_LEN do
-        	 if(level[i][j] == 0 or level[i][j]==2) then
-				local passage=display.newImageRect( blocSheet, 192, size_x, size_y )
-				 passage.x = size_x*j 
-                passage.y = size_y*i
-                passage:toBack()
-        	 end
-            if(level[i][j] == 1) then
+        	
+			-- if(level[i][j] == 1 or level[i][j]==2) then
+				-- local passage=display.newImageRect( blocSheet, 192, size_x, size_y )
+				 -- passage.x = size_x*j 
+                -- passage.y = size_y*i
+                -- passage:toBack()
+        	 -- end
+			
+            if(level[i][j] == 5) then
                 --local brick = display.newImage('brick.png')
                   local brick=display.newImageRect( blocSheet, 201, size_x, size_y )
                   

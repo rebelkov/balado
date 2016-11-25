@@ -81,12 +81,13 @@ end
 
 function _M.calculParcours(map,parcours)
 
+
 	grid.create(map)  -- We create the grid map
-	grid.passable = function(value) return value ~= 1  end -- values ~= 5 are passable
+	grid.passable = function(value) return value ~= 5  end -- values ~= 5 are passable
 	grid.diagonal = true  -- diagonal moves are disallowed (this is the default behavior)
 	--grid.distance = grid.calculateManhattanDistance  -- We will use manhattan heuristic
-grid.distance = grid.calculateDiagonalDistance
-
+--grid.distance = grid.calculateDiagonalDistance
+grid.distance=grid.calculateEuclidienneDistance
 print("parcours ".."("..parcours.pos1_x..","..parcours.pos1_y..") to ("..parcours.pos2_x..","..parcours.pos2_y..")")
 	local target = grid.getNode(parcours.pos2_x,parcours.pos2_y)
 	runDijsktra(grid, target)
