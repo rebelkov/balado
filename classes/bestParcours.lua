@@ -99,7 +99,7 @@ print("parcours ".."("..parcours.pos1_x..","..parcours.pos1_y..") to ("..parcour
 	--printInfo(grid, p, cost, 'path')
 
   _M.listOfPoints=getPathPoint(p)
- print('distance total cible '.._M.listOfPoints.distance)
+ 
 	_M.path = p
 	_M.cost= cost
 

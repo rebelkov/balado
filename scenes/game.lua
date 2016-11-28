@@ -82,7 +82,7 @@ end
 
 
 local function checkTimer()
-	print("checkTimer")
+	--print("checkTimer")
 	if clock.millisecondsLeft <= 0 then 
 		isMovedAvailable=0
 		print(" AIE AIE fin TIMER !!!!!")
@@ -136,6 +136,7 @@ local function animation(event)
 		if ( #pathPoints > 1 ) then
 			followModule.init( followParams, pathPoints, pathPrecision, anchorPoints[1],follower,playerSprite )
 			print('distance reel '..followModule.distancereel)
+			score.distanceRealise=math.floor(score.distanceRealise+followModule.distancereel)
 			startx = anchorPoints[2].x
 			starty = anchorPoints[2].y
 			anchorPoints[1].x = startx
@@ -145,13 +146,14 @@ local function animation(event)
 		end
 		if distFinish < 20 then
 				print ("ARRIVEE !!!!")
-				aff_score.text=score.nbpoint.."/"..score.nbpointCible
+				
 				aff_ptarret.text=score.nbarret
 				
 		else 
 			score.nbarret=score.nbarret + 1
 		end
-
+		aff_score.text=score.distanceRealise.."/"..score.distanceCible
+		aff_ptarret.text=score.nbarret
 end
 
 --fonction tracage du chemin - appel suite a evenement move
@@ -205,7 +207,7 @@ local function drawPath( event, start )
 			  -- pos=(math.round(startx / size_x)+1) * (math.round(starty / size_y)+1)
 			  --print ("position "..startx.."/"..starty.."/")
 
-			  print (" coord "..math.round(startx / size_x).."/"..math.round(starty / size_y))
+			  --print (" coord "..math.round(startx / size_x).."/"..math.round(starty / size_y))
 			  bx=math.round(starty / size_y)
 			  by=math.round(startx / size_x)
 			  if bx < 18 and withBrouillard then
@@ -256,7 +258,7 @@ local function drawPath( event, start )
 
 			  bx=math.round(event.y / size_y)
 			  by=math.round(event.x / size_x)
-			  print(" nuage "..bx.."/"..by)
+			  --print(" nuage "..bx.."/"..by)
 			  brouillard[bx][by].alpha=0
 
 	
@@ -301,8 +303,8 @@ local function drawPath( event, start )
 		
 		if ( path and path.x and #pathPoints > 2 ) then path:append( event.x, event.y ) end
 
-		score.nbpoint=score.nbpoint + #pathPoints
-		aff_score.text=score.nbpoint.."/"..score.nbpointCible
+		--score.nbpoint=score.nbpoint + #pathPoints
+		--aff_score.text=score.nbpoint.."/"..score.nbpointCible
 		animation(event)
 
 	end
@@ -310,6 +312,7 @@ local function drawPath( event, start )
 	if isMovedAvailable==0 and event.phase ~= "began" then
 		-- print("Animation forced")
 		score.nbarret=score.nbarret + 1
+		aff_ptarret.text=score.nbarret
 		animation(event)
 	end
 	return true
@@ -546,22 +549,22 @@ sceneGroup:insert(arrivee)
 	sceneGroup:insert(blocs)
 
 	local playerTable = { 
-		width = 38,
-		height = 30, 
+		width = 16,
+		height = 16, 
 		numFrames = 16, 
-		sheetContentHeight = 120, 
-		sheetContentWidth = 152
+		sheetContentHeight = 64, 
+		sheetContentWidth = 64
 	}
 
 	local sequenceData = {
 		name = "run",
-		frames = {13, 14},
+		frames = {1, 2,3,4},
 		time = 600 
 	}
 
 	--local follower = display.newPolygon( 0, 0, { 0,-28, 30,28, 0,20, -30,28 } )
 	follower = display.newCircle(0,-15,10)
-	local playerSheet =  graphics.newImageSheet( "images/voiture1.png", playerTable )
+	local playerSheet =  graphics.newImageSheet( "images/ant.png", playerTable )
 
 	--creation du sprite
 	playerSprite = display.newSprite( playerSheet, sequenceData ) 
@@ -583,14 +586,14 @@ sceneGroup:insert(arrivee)
      					durationPreparation=25000,
      					x=display.contentCenterX,
      					y=1,
-     					size=60
+     					size=40
      				})
      --clock.clockText:setfillcolor(0.7,0.7,1)
     
     bestParcours.calculParcours(self.level.blocs,{pos1_x=depart_x,pos1_y=depart_y,
     												pos2_x=finish_x,pos2_y=finish_y
     												})
-
+print('distance total cible '..bestParcours.listOfPoints.distance)
 
     for k, node in ipairs(bestParcours.listOfPoints) do
     	--print(('step:%d, x: %d, y: %d'):format(k, node.x, node.y))
@@ -599,10 +602,10 @@ sceneGroup:insert(arrivee)
     end
 
     score.initScore()
-    score.nbpointCible=#bestParcours.listOfPoints
+    score.distanceCible=bestParcours.listOfPoints.distance
 
-    aff_score=display.newText("0".."/"..score.nbpointCible, 80, 1, native.systemFontBold, 60)
-	aff_ptarret=display.newText(score.nbarret, 700, 1, native.systemFontBold, 60)
+    aff_score=display.newText("0".."/"..score.distanceCible, 80, 1, native.systemFontBold, 30)
+	aff_ptarret=display.newText(score.nbarret, 700, 1, native.systemFontBold, 30)
 
 end
 

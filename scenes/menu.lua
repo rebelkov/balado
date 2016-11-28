@@ -61,7 +61,7 @@ function scene:create( event )
     
     
 
-    local title = display.newText("PARCOURARUM", 100, 32, native.systemFontBold, 64 )
+    local title = display.newText("ANTLOST", 100, 32, native.systemFontBold, 64 )
     title.x = display.contentCenterX
     title.y = 80
     title:setFillColor( 1 )
