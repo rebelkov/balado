@@ -236,7 +236,7 @@ local function drawPath( event, start )
 
 		--create end point object for visualization
 		if not ( anchorPoints[2].x ) then
-			anchorPoints[2] = display.newCircle( event.x, event.y, 20 )
+			anchorPoints[2] = display.newCircle( event.x, event.y, 10 )
 			anchorPoints[2]:setFillColor( 0.5, 0.5, 0.2 )
 		end
 		
@@ -597,7 +597,7 @@ print('distance total cible '..bestParcours.listOfPoints.distance)
 
     for k, node in ipairs(bestParcours.listOfPoints) do
     	--print(('step:%d, x: %d, y: %d'):format(k, node.x, node.y))
-			local dot = display.newCircle( node.x,node.y, 8 )
+			local dot = display.newCircle( node.x,node.y, 6 )
 			dot:setFillColor( 1, 1, 1, 0.4 )
     end
 
@@ -626,7 +626,7 @@ function scene:didEnter( event )
   	local sceneGroup = self.view
 	
   
-   anchorPoints[1] = display.newCircle( entree.x, entree.y, 15 )
+   anchorPoints[1] = display.newCircle( entree.x, entree.y, 10 )
    display.currentStage:addEventListener( "touch", drawPath )  
    follower:addEventListener( 'collision', blocCollision )
      

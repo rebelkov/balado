@@ -104,7 +104,7 @@ print ("rotation "..follower.rotation)
 		local pathPointsGroup = display.newGroup() ; 
 		pathPointsGroup:toBack()
 		for p = 1,#pathPoints do
-			local dot = display.newCircle( pathPointsGroup, 0, 0, 8 )
+			local dot = display.newCircle( pathPointsGroup, 0, 0, 6 )
 			dot:setFillColor( 1, 1, 1, 0.4 )
 			dot.x = pathPoints[p].x
 			dot.y = pathPoints[p].y
