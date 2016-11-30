@@ -27,6 +27,8 @@ local function follow( params, obj, pathPoints, pathPrecision,objSprite )
 			isFollowing = 0	
 			transition.cancel( "moveSprite" )
 			transition.cancel( "moveObject" )
+			M.distancerestante=distBetween(obj.x,obj.y,M.pointfinal.x,M.pointfinal.y)
+			print("foloow distance restante "..M.distancerestante)
 		else
 			--print ("isFollowing "..isFollowing)
 			--set variable for time of transition on this segment
@@ -74,8 +76,15 @@ local function follow( params, obj, pathPoints, pathPrecision,objSprite )
 end
 
 
+function M.init(obj,arrivee)
+	M.obj = follower
+	M.distancereel=0
+	M.distancerestante=1000
+	M.pointfinal=arrivee
+end
 
-function M.init( params, pathPoints, pathPrecision, startPoint ,follower,objsprite)
+
+function M.start( params, pathPoints, pathPrecision, startPoint ,follower,objsprite)
 
 	isFollowing = 1
 

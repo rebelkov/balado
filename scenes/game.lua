@@ -9,7 +9,7 @@ local clock = require('classes.clockTimer')
 local bestParcours = require('classes.bestParcours')
 
 local score = require('classes.score')
-
+local newEndLevelPopup = require('classes.end_level_popup').newEndLevelPopup -- Win/Lose dialog windows
 
 physics.start()
 
@@ -134,24 +134,18 @@ local function animation(event)
 		
 		--start follow module
 		if ( #pathPoints > 1 ) then
-			followModule.init( followParams, pathPoints, pathPrecision, anchorPoints[1],follower,playerSprite )
-			print('distance reel '..followModule.distancereel)
+			followModule.start( followParams, pathPoints, pathPrecision, anchorPoints[1],follower,playerSprite )
+			--print('distance reel '..followModule.distancereel)
 			score.distanceRealise=math.floor(score.distanceRealise+followModule.distancereel)
 			startx = anchorPoints[2].x
 			starty = anchorPoints[2].y
 			anchorPoints[1].x = startx
 			anchorPoints[1].y = starty
 			playerSprite:toFront()
+			score.nbarret=score.nbarret + 1
 		
 		end
-		if distFinish < 20 then
-				print ("ARRIVEE !!!!")
-				
-				aff_ptarret.text=score.nbarret
-				
-		else 
-			score.nbarret=score.nbarret + 1
-		end
+		
 		aff_score.text=score.distanceRealise.."/"..score.distanceCible
 		aff_ptarret.text=score.nbarret
 end
@@ -595,11 +589,10 @@ sceneGroup:insert(arrivee)
     												})
 print('distance total cible '..bestParcours.listOfPoints.distance)
 
-    for k, node in ipairs(bestParcours.listOfPoints) do
-    	--print(('step:%d, x: %d, y: %d'):format(k, node.x, node.y))
-			local dot = display.newCircle( node.x,node.y, 6 )
-			dot:setFillColor( 1, 1, 1, 0.4 )
-    end
+   --  for k, node in ipairs(bestParcours.listOfPoints) do
+   --  		local dot = display.newCircle( node.x,node.y, 6 )
+			-- dot:setFillColor( 1, 1, 1, 0.4 )
+   --  end
 
     score.initScore()
     score.distanceCible=bestParcours.listOfPoints.distance
@@ -607,11 +600,54 @@ print('distance total cible '..bestParcours.listOfPoints.distance)
     aff_score=display.newText("0".."/"..score.distanceCible, 80, 1, native.systemFontBold, 30)
 	aff_ptarret=display.newText(score.nbarret, 700, 1, native.systemFontBold, 30)
 
+   followModule.init(follower,arrivee)
+
+	self.endLevelPopup = newEndLevelPopup({g = sceneGroup, levelId = self.levelId})
 end
 
 
 
+-- Check if the player won or lost
+function scene:endLevelCheck()
+	-- if not self.isPaused then
+	-- 	if #self.bugs == 0 then
+	-- 		sounds.play('win')
+	-- 		self:setIsPaused(true)
+	-- 		self.endLevelPopup:show({isWin = true})
+	-- 		timer.cancel(self.endLevelCheckTimer)
+	-- 		self.endLevelCheckTimer = nil
+	-- 		databox['level' .. self.levelId] = true -- Save level completion
+	-- 	elseif self.cannon:getAmmoCount() == 0 then
+	-- 		sounds.play('lose')
+	-- 		self:setIsPaused(true)
+	-- 		self.endLevelPopup:show({isWin = false})
+	-- 		timer.cancel(self.endLevelCheckTimer)
+	-- 		self.endLevelCheckTimer = nil
+	-- 	end
+	-- end
 
+	if followModule.distancerestante<20 then
+		 if not self.isPaused then
+			print ("WIN !!!")
+			self:setIsPaused(true)
+		    self.endLevelPopup:show({isWin = true})
+		    timer.cancel(self.endLevelCheckTimer)
+			self.endLevelCheckTimer = nil
+		end
+	end
+end
+
+
+function scene:setIsPaused(isPaused)
+	self.isPaused = isPaused
+	--self.cannon.isPaused = self.isPaused -- Pause adding trajectory points
+	isFollowing=1
+	if self.isPaused then
+		physics.pause()
+	else
+		physics.start()
+	end
+end
 
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
@@ -630,6 +666,10 @@ function scene:didEnter( event )
    display.currentStage:addEventListener( "touch", drawPath )  
    follower:addEventListener( 'collision', blocCollision )
      
+     -- Only check once in a while for level end
+		self.endLevelCheckTimer = timer.performWithDelay(2000, function()
+			self:endLevelCheck()
+		end, 0)
     
 end
 
@@ -637,6 +677,9 @@ end
 ----------------------------------------------------------------------
 function scene:willExit( event )
 	local sceneGroup = self.view
+	if self.endLevelCheckTimer then
+			timer.cancel(self.endLevelCheckTimer)
+	end
 end
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
