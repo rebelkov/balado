@@ -4,11 +4,12 @@
 local composer = require('composer')
 local widget = require('widget')
 local sounds = require('libs.sounds')
+local controller = require('libs.controller')
 local relayout = require('libs.relayout')
 
 local _M = {}
 
-local newShade = require('classes.shade').newShade
+--local newShade = require('classes.shade').newShade
 
 function _M.newEndLevelPopup(params)
 	local popup = display.newGroup()
@@ -17,7 +18,7 @@ function _M.newEndLevelPopup(params)
 	local background = display.newImageRect(popup, 'images/end_level.png', 480, 480)
 	popup.x, popup.y = relayout._CX, -background.height
 
-	local visualButtons = {}
+	--local visualButtons = {}
 
 	local label = display.newText({
 		parent = popup,
@@ -33,14 +34,15 @@ function _M.newEndLevelPopup(params)
 		width = 96, height = 105,
 		x = -120, y = 80,
 		onRelease = function()
-			sounds.play('tap')
+			--sounds.play('tap')
 			print('GO to Menu')
 			composer.gotoScene('scenes.menu', {time = 500, effect = 'slideRight'})
-		end
+		end,
+		
 	})
 	menuButton.isRound = true
 	popup:insert(menuButton)
-	table.insert(visualButtons, menuButton)
+	--table.insert(visualButtons, menuButton)
 
 	local restartButton = widget.newButton({
 		defaultFile = 'images/buttons/restart.png',
@@ -48,13 +50,13 @@ function _M.newEndLevelPopup(params)
 		width = 96, height = 105,
 		x = 0, y = menuButton.y,
 		onRelease = function()
-			sounds.play('tap')
+			--sounds.play('tap')
 			composer.gotoScene('scenes.reload_game', {params = params.levelId})
 		end
 	})
 	restartButton.isRound = true
 	popup:insert(restartButton)
-	table.insert(visualButtons, restartButton)
+	--table.insert(visualButtons, restartButton)
 
 	-- Don't display the next button if it was the last level
 	if params.levelId < composer.getVariable('levelCount') then
@@ -70,29 +72,42 @@ function _M.newEndLevelPopup(params)
 		})
 		nextButton.isRound = true
 		popup:insert(nextButton)
-		table.insert(visualButtons, nextButton)
+		--table.insert(visualButtons, nextButton)
 	end
 
+	
 	local superParams = params
 	function popup:show(params)
 		-- Shade dims the background and makes it impossible to touch
-		self.shade = newShade(superParams.g)
-		
+		--self.shade = newShade(superParams.g)
+		popup:toFront()
 
 		if params.isWin then
 			label.text = 'GAGNE !'
 		else
 			label.text = 'PERDU !'
 		end
+		
 
 		--controller.setVisualButtons(visualButtons)
 		self.x = relayout._CX
-		transition.to(self, {time = 250, y = relayout._CY, transition = easing.outExpo, onComplete = function()
-			relayout.add(self)
+		self.y=relayout._CY
+
+		 transition.to(self, {time = 250, y = relayout._CY,  onComplete = function()
+
+	--composer.gotoScene('scenes.menu', {time = 500, effect = 'slideRight'})
+
+
+		-- 		relayout.add(self)
+		-- 	print("show popu "..label.text)
+		--     --table.insert(visualButtons,self)
+
+
 		end})
-		self:toFront()
+		--relayout.add(self)
+		  
 	end
-	popup:toFront()
+	
 	return popup
 end
 
