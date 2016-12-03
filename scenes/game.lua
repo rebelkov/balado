@@ -1,7 +1,6 @@
 
 local composer = require( "composer" )
 
-local scene = composer.newScene()
 local physics = require "physics"
 local widget = require('widget')
 local clock = require('classes.clockTimer')
@@ -12,6 +11,7 @@ local score = require('classes.score')
 local newEndLevelPopup = require('classes.end_level_popup').newEndLevelPopup -- Win/Lose dialog windows
 local newPlayer = require('classes.player').newPlayer -- fourmi player
 
+local scene = composer.newScene()
 
 physics.start()
 
@@ -113,7 +113,7 @@ local function clearPath()
 		--if ( crayon ) then display.remove( crayon ) end
 		
 		--reset/clear follow module items (remove these lines if not using "follow.lua")
-		transition.cancel( "moveObject" )
+		--transition.cancel( "moveObject" )
 		--if ( followModule.obj ) then display.remove( followModule.obj ) ; followModule.obj = nil end
 		--suppression du trace 
 		if ( followModule.ppg ) then
@@ -149,16 +149,16 @@ local function animation(event)
 		aff_ptarret.text=score.nbarret
 
         --arret du timer
-        --timer.cancel(countDownTimer)
+        timer.cancel(countDownTimer)
 
 
-		-- clock.clockText.text="good luck "
+		clock.clockText.text="good luck "
 
-		-- if ( leadingSegment ) then display.remove( leadingSegment ) end
+		if ( leadingSegment ) then display.remove( leadingSegment ) end
 
-		-- local distFinish=distanceBetween(event,arrivee) 
+		local distFinish=distanceBetween(event,arrivee) 
 		
-		-- --start follow module
+		--start follow module
 		-- if ( #pathPoints > 1 ) then
 		-- 	followModule.start( followParams, pathPoints, pathPrecision, trace,follower,player )
 		-- 	--print('distance reel '..followModule.distancereel)
@@ -172,9 +172,11 @@ local function animation(event)
 		
 		-- end
 		
-		-- aff_score.text=score.distanceRealise.."/"..score.distanceCible
-		-- aff_ptarret.text=score.nbarret
+		aff_score.text=score.distanceRealise.."/"..score.distanceCible
+		aff_ptarret.text=score.nbarret
 end
+
+
 
 --fonction tracage du chemin - appel suite a evenement move
 -- phase 1 - init
@@ -195,9 +197,9 @@ end
 --         update du nouveau point de depart
 --       test si arrivee
 local function drawPath( event, start )
-	if (isFollowing == 1) then
-		return true
-	end
+	-- if (isFollowing == 1) then
+	-- 	return true
+	-- end
 	local bx,by
 	if ( event.phase == "began" ) then
 		--print("event "..event.target.id)
@@ -273,6 +275,9 @@ local function drawPath( event, start )
 		if ( path and path.x and #pathPoints > 2 ) then path:append( event.x, event.y ) end
 
 		animation(event)
+
+		  display.getCurrentStage():setFocus( nil )
+           trace.isFocus = nil
 
 	end
 
@@ -387,18 +392,7 @@ function buildLevel(level)
 
     local len = table.maxn(level)
 
-    -- for   i = 1  , len +5 do
-    -- 	brouillard[i]={}
-    --     for j = 1  , W_LEN +5 do
-    --     	  brouillard[i][j]=display.newRect(120,220,size_x,size_y)
-    --         		--print("new cx "..i.." "..j)
-    --         		brouillard[i][j].x = size_x*j
-    --         		brouillard[i][j].y = size_y*i
-    --         		brouillard[i][j]:setFillColor( 1, 0, 0 )
-    --         		brouillard[i][j].alpha= 0
-    --     end
-    --  end
-
+   
     for i = 1, len do
     	
         for j = 1, W_LEN do
@@ -452,20 +446,6 @@ function buildLevel(level)
 	
             end
 
---     		brouillard[i][j].x = size_x*j
---     		brouillard[i][j].y = size_y*i
---     		brouillard[i][j]:setFillColor( 1, 0, 0 )
---     		if withBrouillard then
---     			brouillard[i][j].alpha= 1
---     		end
--- --print("cccx "..i.." "..j)
---             if(level[i][j] >7) then
-            	   
---             		brouillard[i][j].alpha= 0
-           
-
---             end
-
         end
     end
 
@@ -482,7 +462,6 @@ function reinitFollower()
 	follower:setLinearVelocity( 0, 0 )
 
 end
-
 
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
@@ -511,12 +490,12 @@ function scene:create( event )
 
 
      --ajout du timer
-     -- clock.newTimer({
-     -- 					durationPreparation=25000,
-     -- 					x=display.contentCenterX,
-     -- 					y=1,
-     -- 					size=40
-     -- 				})
+     clock.newTimer({
+     					durationPreparation=25000,
+     					x=display.contentCenterX,
+     					y=1,
+     					size=40
+     				})
     
     --calcul du parcours cible
     bestParcours.calculParcours(self.level.blocs,{pos1_x=depart_x,pos1_y=depart_y,
@@ -538,20 +517,9 @@ function scene:create( event )
 
 	sceneGroup:insert(aff_ptarret)
 	sceneGroup:insert(aff_score)
-	--sceneGroup:insert(clock.clockText)
+	sceneGroup:insert(clock.clockText)
 	
-local menuButton = widget.newButton({
-		defaultFile = 'images/buttons/menu.png',
-		overFile = 'images/buttons/menu-over.png',
-		width = 96, height = 105,
-		x = 100, y = display.contentHeight+20,
-		onRelease = function()
-			--sounds.play('tap')
-			print('GO to Menu')
-			composer.gotoScene('scenes.menu', {time = 500, effect = 'slideRight'})
-		end,
-		
-	})
+
 	menuButton.isRound = true
 	sceneGroup:insert(menuButton)
 	
@@ -593,7 +561,7 @@ function scene:endLevelCheck()
 		print ("PERDU !!!")
 		self.endLevelPopup:show({isWin = false})
 		timer.cancel(self.endLevelCheckTimer)
-			self.endLevelCheckTimer = nil
+		self.endLevelCheckTimer = nil
 	end
 end
 
