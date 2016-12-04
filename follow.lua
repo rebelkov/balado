@@ -76,8 +76,8 @@ local function follow( params, obj, pathPoints, pathPrecision,objSprite )
 end
 
 
-function M.init(arrivee)
-	
+function M.init(obj,arrivee)
+	M.obj = follower
 	M.distancereel=0
 	M.distancerestante=1000
 	M.pointfinal=arrivee
@@ -111,7 +111,7 @@ print ("rotation "..follower.rotation)
 	-- stokage des points affiche dans ppg
 	if ( params.showPoints == true ) then
 		local pathPointsGroup = display.newGroup() ; 
-		
+		pathPointsGroup:toBack()
 		for p = 1,#pathPoints do
 			local dot = display.newCircle( pathPointsGroup, 0, 0, 6 )
 			dot:setFillColor( 1, 1, 1, 0.4 )
@@ -120,9 +120,7 @@ print ("rotation "..follower.rotation)
 			if (p >1 ) then
 				distreel=distreel+distBetween(pathPoints[p-1].x,pathPoints[p-1].y,pathPoints[p].x,pathPoints[p].y)
 			end
-			pathPointsGroup:insert(dot)
 		end
-		pathPointsGroup:toBack()
 		M.ppg = pathPointsGroup
 		M.distancereel=distreel
 	end
