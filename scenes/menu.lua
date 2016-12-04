@@ -124,8 +124,6 @@ function scene:create( event )
     creditsButton.y = display.contentCenterY + 100
     sceneGroup:insert( creditsButton )
 
-    sceneGroup:toFront()
-
 end
 
 function scene:show( event )
