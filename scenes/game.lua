@@ -528,7 +528,7 @@ print('distance total cible '..bestParcours.listOfPoints.distance)
    --sceneGroup:inert(clock)
    sceneGroup:insert(playerSprite)
 
-   self.parcours = newParcours({start=entree, level = self.levelId})
+   	self.parcours = newParcours({start=entree, level = self.levelId})
 	self.endLevelPopup = newEndLevelPopup({g = sceneGroup, levelId = self.levelId})
 end
 

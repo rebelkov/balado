@@ -4,6 +4,9 @@ local _M = {}
 
 local util = require("classes.utilitaires")
 
+local newFollower = require('classes.follower').newFollower -- parcours du joueur
+
+
 local pathPoints = {}
 
 
@@ -30,10 +33,13 @@ function _M.newParcours(params)
 
 	local newPoint
 	local path
-	local nbArret
+	local nbArret = 0
 	-- creation du point de tracage
 	local pointTracage=display.newCircle( pointDepart.x, pointDepart.y, 10 )
 
+	local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
+										pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pointDepart}
+	local mouvement = newFollower(followParams)
 
 	--retourn parcours des points traces
 	function pointTracage:getParcours()
@@ -47,9 +53,6 @@ function _M.newParcours(params)
 			if ( newPoint ) then display.remove( newPoint ) end
 	end
 
-	function pointTracage:animationParcours()
-		
-	end
 
 
 	-- Mouvement du point
@@ -114,7 +117,12 @@ function _M.newParcours(params)
 	
 				display.getCurrentStage():setFocus(self, nil)
 				self.isFocused = false
+
+				--debut animation du parcours
+				followParams = { segmentTime=50, constantRate=true, showPoints=true, 
+										pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pathPoints[1],pointArrivee=event}
 				
+				self.mouvement:start(followParams)
 			end
 		end
 		return true
