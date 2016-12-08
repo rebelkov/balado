@@ -7,8 +7,9 @@ local physics = require "physics"
 local clock = require('classes.clockTimer')
 
 local bestParcours = require('classes.bestParcours')
-
 local score = require('classes.score')
+
+local newParcours = require('classes.parcours').newParcours -- parcours du joueur
 local newEndLevelPopup = require('classes.end_level_popup').newEndLevelPopup -- Win/Lose dialog windows
 
 physics.start()
@@ -37,7 +38,7 @@ local arrivee
 local bloc
 local startx = 20
 local starty = 1000
-
+local brouillard
 local endx = display.viewableContentWidth-20
 local endy = 100
 local distStart = 0
@@ -70,8 +71,9 @@ local finish_y
 
 local aff_score
 local aff_ptarret
-local brouillard = {}
+
 local withBrouillard=false
+
 
 --function pour calculer la distance entre deux points
 local function distanceBetween( point1, point2 )
@@ -127,7 +129,7 @@ local function animation(event)
 		timer.cancel(countDownTimer)
 
 		clock.clockText.text="good luck "
-
+		if (path) then display.remove(path) end
 		if ( leadingSegment ) then display.remove( leadingSegment ) end
 
 		local distFinish=distanceBetween(event,arrivee) 
@@ -184,47 +186,17 @@ local function drawPath( event, start )
 		
 		if distStart > 20 then
 			isMovedAvailable = 0
-			-- display.getCurrentStage():setFocus(nil)
-			-- anchorPoints[1]:setFillColor( 1, 0.1, 0.1 )
-			-- pathPoints[#pathPoints+1] = { x=startx, y=starty }
-
+		
 		--create start point object for visualization
 		else
 			isMovedAvailable = 1
 			anchorPoints[1]:setFillColor( 0.8, 0.8, 0.9 )
 			display.getCurrentStage():setFocus( anchorPoints[1] )
 			pathPoints[#pathPoints+1] = { x=startx, y=starty }
-			  -- for j = 1, 2 do
-			  -- 	brouillard
-			  -- end
-
-			  -- pos=(math.round(startx / size_x)+1) * (math.round(starty / size_y)+1)
-			  --print ("position "..startx.."/"..starty.."/")
-
-			  --print (" coord "..math.round(startx / size_x).."/"..math.round(starty / size_y))
-			  bx=math.round(starty / size_y)
-			  by=math.round(startx / size_x)
-			  if bx < 18 and withBrouillard then
- 				brouillard[bx][by].alpha=0
- 				brouillard[bx][by+1].alpha=0.2
- 				brouillard[bx+1][by+1].alpha=0.2
- 				brouillard[bx+1][by].alpha=0.2
- 				brouillard[bx+1][by+2].alpha=0.4
- 				brouillard[bx+2][by+2].alpha=0.4
- 				brouillard[bx+2][by+1].alpha=0.4
- 				
- 				
-			  end
-			 --  brouillard[pos].alpha=0.1
-			 --  brouillard[pos-1].alpha=0.1
-				-- brouillard[pos-2].alpha=0.1
-			
+					
 
 		end
 	elseif ( event.phase == "moved" and isMovedAvailable == 1) then
-		
-		--print ("draw path "..event.phase)
-
 		local previousPoint = pathPoints[#pathPoints]
 		local dist = distanceBetween( previousPoint, event )
 
@@ -250,40 +222,18 @@ local function drawPath( event, start )
 			
 			end
 
-			  bx=math.round(event.y / size_y)
-			  by=math.round(event.x / size_x)
-			  --print(" nuage "..bx.."/"..by)
-			  brouillard[bx][by].alpha=0
-
-	
- 				brouillard[bx][by+1].alpha=0
- 				brouillard[bx+1][by+1].alpha=0
- 				brouillard[bx+1][by].alpha=0
- 				brouillard[bx+1][by+2].alpha=0
- 				brouillard[bx+2][by+2].alpha=0
- 				brouillard[bx+2][by+1].alpha=0
-
- 				
- 			 if bx > 1  and by > 1  then
-			  	brouillard[bx-1][by].alpha=0
-			  	brouillard[bx-1][by+1].alpha=0
-			  	brouillard[bx-1][by-1].alpha=0
-			  end
- 				
-			  if bx > 2  and by > 2  then
-			  	brouillard[bx-2][by].alpha=0
-			  	brouillard[bx-2][by+1].alpha=0
-			  	brouillard[bx-2][by-1].alpha=0
-			  end
+							
+ 			
 		end
 
 		--move end point in unison with touch
 		anchorPoints[2].x = event.x
 		anchorPoints[2].y = event.y
-
+		
 		-- si assez de distance ajout point et ajoute segment
 		if ( dist >= pathPrecision and distStart < 20 ) then
 			pathPoints[#pathPoints+1] = { x=event.x, y=event.y }
+
 			if (path and path.x and  #pathPoints > 2 ) then path:append( event.x, event.y ) end
 		end
 
@@ -308,10 +258,25 @@ local function drawPath( event, start )
 	return true
 end
 
+-- touch listener function
+function movebrouillard( event )
+    if event.phase == "began" then
+	
+        self.markX = self.x    -- store x location of object
+        self.markY = self.y    -- store y location of object
+	
+    elseif event.phase == "moved" then
+	
+        local x = (event.x - event.xStart) + self.markX
+        local y = (event.y - event.yStart) + self.markY
+        
+        self.x, self.y = x, y    -- move object based on calculations above
+    end
+    
+    return true
+end
 
 local function finRebond()
-
-
 	print ("Rebond - anchorPoints[1] "..anchorPoints[1].x.."/"..anchorPoints[1].y)
 end
 
@@ -409,34 +374,12 @@ function buildLevel(level)
 
     local len = table.maxn(level)
 
-    for   i = 1  , len +5 do
-    	brouillard[i]={}
-        for j = 1  , W_LEN +5 do
-        	  brouillard[i][j]=display.newRect(120,220,size_x,size_y)
-            		--print("new cx "..i.." "..j)
-            		brouillard[i][j].x = size_x*j
-            		brouillard[i][j].y = size_y*i
-            		brouillard[i][j]:setFillColor( 1, 0, 0 )
-            		brouillard[i][j].alpha= 0
-        end
-     end
-
-    for i = 1, len do
-    	
+   for i = 1, len do
         for j = 1, W_LEN do
-        	
-			-- if(level[i][j] == 1 or level[i][j]==2) then
-				-- local passage=display.newImageRect( blocSheet, 192, size_x, size_y )
-				 -- passage.x = size_x*j 
-                -- passage.y = size_y*i
-                -- passage:toBack()
-        	 -- end
-			
+  			
             if(level[i][j] == 5) then
                 --local brick = display.newImage('brick.png')
-                  local brick=display.newImageRect( blocSheet, 201, size_x, size_y )
-                  
-                
+                local brick=display.newImageRect( blocSheet, 201, size_x, size_y )
                 brick.name = 'brick'
                 brick.x = size_x*j 
                 brick.y = size_y*i
@@ -464,40 +407,19 @@ function buildLevel(level)
             	--print("entree ".. size_x*j..","..size_y*i)
             	depart_x=j
             	depart_y=i
-  				-- entree = display.newCircle( size_x*j, size_y*i, 20 )
-  				-- entree:setFillColor(1)
   				entree=display.newImageRect( "images/start.png",  size_x, size_y )
   				entree.x=size_x*j
   				entree.y=size_y*i
-
-
             end
             if(level[i][j] == 9) then
             	--print("arrivee ".. size_x*j..","..size_y*i)
             	finish_x=j
             	finish_y=i
-				--arrivee = display.newCircle( size_x*j, size_y*i, 20 )
-				--arrivee:setFillColor(1)
 				arrivee=display.newImageRect( "images/finish1.png",  size_x, size_y )
   				arrivee.x=size_x*j
   				arrivee.y=size_y*i
-	
             end
-
-    		brouillard[i][j].x = size_x*j
-    		brouillard[i][j].y = size_y*i
-    		brouillard[i][j]:setFillColor( 1, 0, 0 )
-    		if withBrouillard then
-    			brouillard[i][j].alpha= 1
-    		end
---print("cccx "..i.." "..j)
-            if(level[i][j] >7) then
-            	   
-            		brouillard[i][j].alpha= 0
-           
-
-            end
-
+  		
         end
     end
 
@@ -528,15 +450,15 @@ function scene:create( event )
 	buildLevel(self.level.blocs)
 	
 
-sceneGroup:insert(entree)
-sceneGroup:insert(arrivee)
+	sceneGroup:insert(entree)
+	sceneGroup:insert(arrivee)
 	sceneGroup.isVisible = true
-	-- bloc=display.newRect(120,220,20,20)
 	
-	-- physics.addBody (bloc, "static", {bounce=2})
-	--blocs:insert(bloc)
-	--bloc.isSleepingAllowed = false
 	sceneGroup:insert(blocs)
+
+     
+	
+
 
 	local playerTable = { 
 		width = 16,
@@ -605,6 +527,8 @@ print('distance total cible '..bestParcours.listOfPoints.distance)
    sceneGroup:insert(follower)
    --sceneGroup:inert(clock)
    sceneGroup:insert(playerSprite)
+
+   self.parcours = newParcours({start=entree, level = self.levelId})
 	self.endLevelPopup = newEndLevelPopup({g = sceneGroup, levelId = self.levelId})
 end
 
@@ -663,13 +587,26 @@ function scene:didEnter( event )
 	--local sceneGroup = self.view   
   	local sceneGroup = self.view
 	
+	g=display.newGroup()
   
    anchorPoints[1] = display.newCircle( entree.x, entree.y, 10 )
-   anchorPoints[1]:addEventListener( "touch", drawPath )  
+ --   brouillard = display.newImageRect( 'images/end_level.png', 480, 480)
+	-- -- brouillard.fill.effect = "filter.iris"
+	-- -- brouillard.fill.effect.center = { 0.5, 0.5 }
+	-- -- brouillard.fill.effect.aperture = 0.5
+	-- -- brouillard.fill.effect.aspectRatio = ( brouillard.width / brouillard.height )
+	-- -- brouillard.fill.effect.smoothness = 0.5
+
+ --    brouillard.x=entree.x
+ --    brouillard.y=entree.y
+   -- g:insert(anchorPoints[1])
+   -- g:insert(brouillard)
+   -- g:addEventListener( "touch", drawPath )  
+   --brouillard:addEventListener("touch",movebrouillard)
    follower:addEventListener( 'collision', blocCollision )
      
      -- Only check once in a while for level end
-		self.endLevelCheckTimer = timer.performWithDelay(2000, function()
+		self.endLevelCheckTimer = timer.performWithDelay(1000, function()
 			self:endLevelCheck()
 		end, 0)
     

@@ -15,6 +15,7 @@ function _M.newEndLevelPopup(params)
 	params.g:insert(popup)
 
 	local background = display.newImageRect(popup, 'images/end_level.png', 480, 480)
+	
 	popup.x, popup.y = relayout._CX, -background.height
 
 	local visualButtons = {}

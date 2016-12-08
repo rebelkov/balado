@@ -113,10 +113,10 @@ print ("rotation "..follower.rotation)
 		local pathPointsGroup = display.newGroup() ; 
 		pathPointsGroup:toBack()
 		for p = 1,#pathPoints do
-			local dot = display.newCircle( pathPointsGroup, 0, 0, 6 )
-			dot:setFillColor( 1, 1, 1, 0.4 )
-			dot.x = pathPoints[p].x
-			dot.y = pathPoints[p].y
+			-- local dot = display.newCircle( pathPointsGroup, 0, 0, 6 )
+			-- dot:setFillColor( 1, 1, 1, 0.4 )
+			-- dot.x = pathPoints[p].x
+			-- dot.y = pathPoints[p].y
 			if (p >1 ) then
 				distreel=distreel+distBetween(pathPoints[p-1].x,pathPoints[p-1].y,pathPoints[p].x,pathPoints[p].y)
 			end

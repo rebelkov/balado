@@ -1,21 +1,56 @@
--- player 
+-- parcours
 -- consiste a creer l'objet pour tracer le parcours
 local _M = {}
 
 local util = require("classes.utilitaires")
 
+local pathPoints = {}
+
+
+local function addPointToParcours(point )
+	pathPoints[#pathPoints+1] = { x=point.x, y=point.y }
+end
+
+local function getNbPointParcours()
+	return #pathPoints
+end
+
+local function getLastPointParcours()
+	return pathPoints[#pathPoints]
+end
+
+
 function _M.newParcours(params)
 
 	local map = params.map
-	local level = params.level
-	local pointDepart=params.entree
+	
+	local pointDepart=params.start
 	--adjust this number to effect the "smoothness" of the path; lower value yields a more precise path
 	local pathPrecision = 20
 
-	local newPoint;
-
+	local newPoint
+	local path
+	local nbArret
 	-- creation du point de tracage
 	local pointTracage=display.newCircle( pointDepart.x, pointDepart.y, 10 )
+
+
+	--retourn parcours des points traces
+	function pointTracage:getParcours()
+		return pathPoints
+	end
+
+	function pointTracage:clearParcours()
+			for i = #pathPoints,1,-1 do 
+				pathPoints[i] = nil 
+			end
+			if ( newPoint ) then display.remove( newPoint ) end
+	end
+
+	function pointTracage:animationParcours()
+		
+	end
+
 
 	-- Mouvement du point
 	-- le mouvement doit être suffisament long pour etre pris en compte (>20 px)
@@ -26,7 +61,7 @@ function _M.newParcours(params)
 			self.isFocused = true
 			self:setFillColor( 0.8, 0.8, 0.9 )
 			--ajoute les coordonnee du point de depart au parcours util ?
-			self.parent:addPointToParcours(event)
+			addPointToParcours(event)
 			
 			
 		elseif self.isFocused then
@@ -38,10 +73,11 @@ function _M.newParcours(params)
 					newPoint:setFillColor( 0.5, 0.5, 0.8 )
 				end
 
-				local nbPointParcours=self.parent:getNbPointParcours()
+				local nbPointParcours = getNbPointParcours()
 
 				-- si distance trop courte entre deux points alors pas de trace
-				local previousPoint = self.parent:getLastPointParcours()
+				local previousPoint = getLastPointParcours()
+
 
 				--Debut du trace
 				if ( nbPointParcours < 2 ) then
@@ -58,7 +94,7 @@ function _M.newParcours(params)
 				-- si assez de distance ajout point et ajoute segment
 				local dist = util.distanceEuclidienneBetween( previousPoint, event )
 				if ( dist >= pathPrecision ) then
-					self.parent:addPointToParcours(event)
+					addPointToParcours(event)
 					if (path and path.x and  nbPointParcours >=2 ) then 
 							path:append( event.x, event.y ) 
 					end
@@ -68,9 +104,11 @@ function _M.newParcours(params)
 				newPoint.x = event.x
 				newPoint.y = event.y
 			else
-
-				self.parent:addPointToParcours(event)
-				if ( path and path.x and self.parent:getNbPointParcours() > 2 ) then 
+				self.x = event.x
+				self.y =  event.y
+				addPointToParcours(event)
+				nbArret = nbArret + 1
+				if ( path and path.x and getNbPointParcours() > 2 ) then 
 								path:append( event.x, event.y ) 
 				end
 	
