@@ -11,10 +11,6 @@ function _M.newFollower(params)
 	local pointDepart=params.pointDepart
 	local followerCollisionFilter = { categoryBits=1, maskBits=6 } --collision avec brick(2) et ovni(4)
 
-	_M.distancereel=0
-	_M.distancerestante=1000
-	_M.pointfinal=params.pointArrivee
-
 	local playerTable = { 
 		width = 16,
 		height = 16, 
@@ -47,9 +43,11 @@ function _M.newFollower(params)
 	follower.isSleepingAllowed = false
 	follower.gravityScale=0
 
-
-
-
+	follower.isEnMouvement=false
+	follower.distanceRealise=0
+    follower.pointfinal=params.pointArrivee
+    follower.distancerestante = 1000
+	
 	local function angleBetween( srcX, srcY, dstX, dstY )
 		local angle = ( math.deg( math.atan2( dstY-srcY, dstX-srcX ) )+90 )
 		return angle % 360
@@ -62,34 +60,50 @@ function _M.newFollower(params)
 		return dist
 	end
 
-	--fonction mouvement follower
-	local function follow( params )
+	function follower:removeObj()
+			playerSprite:removeSelf()
+			playerSprite = nil
+	end
 
-		local pathPoints=params.pathPoints
-
-		local function nextTransition()
-			--fin mouvement
-			if ( follower.nextPoint > #pathPoints or isFollowing == 0) then
-				print( "follow FINISHED "..follower.nextPoint.." pathPoints:"..#pathPoints )
+	function follower:arretMouvement()
 				playerSprite:pause()
 				isFollowing = 0	
 				transition.cancel( "moveSprite" )
 				transition.cancel( "moveObject" )
-				_M.distancerestante=distBetween(follower.x,follower.y,_M.pointfinal.x,_M.pointfinal.y)
-				print("foloow distance restante ".._M.distancerestante)
+				follower.distancerestante=distBetween(self.x,self.y,follower.pointfinal.x,follower.pointfinal.y)
+				follower.isEnMouvement=false
+				print("follower distante restante "..follower.distancerestante)
+
+	end
+
+	--fonction mouvement follower
+	local function follow( params,obj )
+
+		local pathPoints=params.pathPoints
+		follower.distanceRealise=0
+		follower.distancerestante=1000
+
+		local function nextTransition()
+			--fin mouvement
+			if ( obj.nextPoint > #pathPoints or isFollowing == 0) then
+				follower:arretMouvement()
+				
 			else
 
 				local transTime = params.segmentTime
+				
 				--if "params.constantRate" is true, adjust time according to segment distance
 				if ( params.constantRate == true ) then
-					local dist = distBetween( follower.x, follower.y, pathPoints[follower.nextPoint].x, pathPoints[follower.nextPoint].y )
+					local dist = distBetween( obj.x, obj.y, pathPoints[obj.nextPoint].x, pathPoints[obj.nextPoint].y )
 					transTime = (dist/params.pathPrecision) * params.segmentTime
 				end
 			
+				--calcul distance realise
+				follower.distanceRealise=follower.distanceRealise + distBetween( obj.x, obj.y, pathPoints[obj.nextPoint-1].x, pathPoints[obj.nextPoint-1].y )
 				--rotate object to face next point
-				if ( follower.nextPoint < #pathPoints ) then
-					follower.rotation = angleBetween( follower.x, follower.y, pathPoints[follower.nextPoint].x, pathPoints[follower.nextPoint].y )
-					playerSprite.rotation = follower.rotation 
+				if ( obj.nextPoint < #pathPoints ) then
+					obj.rotation = angleBetween( obj.x, obj.y, pathPoints[obj.nextPoint].x, pathPoints[obj.nextPoint].y )
+					playerSprite.rotation = obj.rotation 
 					--print ("rotation "..obj.rotation)
 				end
 			
@@ -99,38 +113,38 @@ function _M.newFollower(params)
 					transition.to( obj, {
 						tag = "moveObject",
 						time = transTime,
-						x = pathPoints[follower.nextPoint].x,
-						y = pathPoints[follower.nextPoint].y,
-						onComplete = nextTransition
+						x = pathPoints[obj.nextPoint].x,
+						y = pathPoints[obj.nextPoint].y
+						
 					})
 					transition.to( playerSprite, {
 						tag = "moveSprite",
 						time = transTime,
 						x = pathPoints[follower.nextPoint].x,
-						y = pathPoints[follower.nextPoint].y
+						y = pathPoints[follower.nextPoint].y,
+						onComplete = nextTransition
 					})
 			
 
-				follower.nextPoint = follower.nextPoint+1
-
+				obj.nextPoint = obj.nextPoint+1
+				
 			end
 		end --fin nextTransition
 		
-		follower.nextPoint = 2
+		obj.nextPoint = 2
 		nextTransition()
 
 	end
 
-	function follower:start( params)
+	function follower:start( params,pointTracage)
 
 		playerSprite.xScale, playerSprite.yScale = 2,2
 		follower.x = params.pointDepart.x
 		follower.y = params.pointDepart.y
+		follower.isEnMouvement=true
 		isFollowing=1
-		print ("Init follow "..follower.x.."/"..follower.y)
+		print ("Init follow "..follower.x,follower.y)
 		follower.rotation = angleBetween( params.pathPoints[1].x, params.pathPoints[1].y, params.pathPoints[2].x, params.pathPoints[2].y )
-		print ("rotation "..follower.rotation)
-
 	
 		_M.distanceParcouru=0
 		local distreel=0;
@@ -143,28 +157,35 @@ function _M.newFollower(params)
 	--Si ShowPoints, Affichage des point sur le trace
 	-- stokage des points affiche dans ppg
 	
-		local pathPointsGroup = display.newGroup() ; 
+		local pathPointsGroup = display.newGroup() 
 		pathPointsGroup:toBack()
 		for p = 1,#params.pathPoints do
-			--if ( params.showPoints == true ) then
-				-- local dot = display.newCircle( pathPointsGroup, 0, 0, 6 )
-				-- dot:setFillColor( 1, 1, 1, 0.4 )
-				-- dot.x = pathPoints[p].x
-				-- dot.y = pathPoints[p].y
-			--end
 			if (p >1 ) then
 				distreel=distreel+distBetween(params.pathPoints[p-1].x,params.pathPoints[p-1].y,params.pathPoints[p].x,params.pathPoints[p].y)
 			end
 		end
-		--M.ppg = pathPointsGroup
-		_M.distanceParcouru=distreel
-	
-
-		--declenche animation du parcours
-		follow( params)
-
-
+		
+    	--declenche animation du parcours
+		follow( params,follower)
 	end
+
+	-- gestion de la colision du player avec un bloc
+	local function blocCollision(self,event)
+		if event.phase== 'began' then
+
+			 print ("Collision "..event.phase)	
+			 	--arret du mouvement	
+			 	follower:arretMouvement()
+
+		elseif event.phase == "ended" then
+				--replace point de tracage sur poit de collision
+				
+				
+		end
+	end
+
+	follower.collision = blocCollision
+	follower:addEventListener('collision')
 
 	return follower
 end

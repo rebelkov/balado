@@ -3,12 +3,9 @@
 local _M = {}
 
 local util = require("classes.utilitaires")
-
-local newFollower = require('classes.follower').newFollower -- parcours du joueur
-
+local clock = require('classes.clockTimer')
 
 local pathPoints = {}
-
 
 local function addPointToParcours(point )
 	pathPoints[#pathPoints+1] = { x=point.x, y=point.y }
@@ -23,52 +20,109 @@ local function getLastPointParcours()
 end
 
 
-function _M.newParcours(params)
+
+function _M.newParcours(params,newFollower)
 
 	local map = params.map
 	
 	local pointDepart=params.start
+	local pointArrivee=params.fin
+	local nbArret = params.nbArretMax
 	--adjust this number to effect the "smoothness" of the path; lower value yields a more precise path
 	local pathPrecision = 20
 
 	local newPoint
 	local path
-	local nbArret = 0
+	
 	-- creation du point de tracage
 	local pointTracage=display.newCircle( pointDepart.x, pointDepart.y, 10 )
 
-	local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
-										pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pointDepart}
-	local mouvement = newFollower(followParams)
+	-- local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
+	-- 									pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pointDepart,pointArrivee=pointArrivee}
+	 local mouvement =newFollower 
 
-	--retourn parcours des points traces
-	function pointTracage:getParcours()
-		return pathPoints
+	--mouvement = newFollower(followParams)
+	
+	pointTracage.distancerestante=200
+	pointTracage.perdu=false
+	
+	--ajout du timer
+     clock.newTimer({
+     					durationPreparation=10000,
+     					x=display.contentCenterX,
+     					y=1,
+     					size=40
+     				})
+
+
+  -- update chrnometre pour le parcours
+  -- fin du chrono alors arrte parcours et debut mouvement
+	local function checkTimer()
+		--print("checkTimer")
+		if clock.millisecondsLeft <= 0 then 
+			mouvement.isEnMouvement = true
+			pointTracage.perdu=true
+			--print(" AIE AIE fin TIMER !!!!!")
+			return clock:finTime()
+		else 
+			return clock:updateTime()
+		end
 	end
 
-	function pointTracage:clearParcours()
+
+	local function clearParcours()
 			for i = #pathPoints,1,-1 do 
 				pathPoints[i] = nil 
 			end
-			if ( newPoint ) then display.remove( newPoint ) end
+			if ( newPoint ) then 
+				display.remove( newPoint ) 
+				newPoint = nil
+			end
+			
 	end
 
 
+	function pointTracage:removeObj()
+			clearParcours()
+			if (path) then
+				display.remove( path ) 
+				path=nil
+			end
+			checkPosition=nil
+			if countDownTimer then 
+				timer.cancel(countDownTimer)
+				countDownTimer = nil
+			end
+		
+			
+	end
 
 	-- Mouvement du point
 	-- le mouvement doit être suffisament long pour etre pris en compte (>20 px)
 	function pointTracage:touch(event)
 
 		if event.phase == 'began' then
+			--si animation en cours, pas de possibilite de tracer
+			if mouvement.isEnMouvement then 
+				print("mouvement en cours ...")
+				return true 
+			end
 			display.getCurrentStage():setFocus(self, event.id)
 			self.isFocused = true
 			self:setFillColor( 0.8, 0.8, 0.9 )
 			--ajoute les coordonnee du point de depart au parcours util ?
+			clearParcours()
 			addPointToParcours(event)
+
+			--demarrage ou reprise du chrono
+			--clock.millisecondsLeft=25000
+	 		if countDownTimer then timer.resume(countDownTimer)
+	 						else  countDownTimer = timer.performWithDelay( 100, checkTimer ,250 ) 
+	 		end
 			
 			
 		elseif self.isFocused then
-			if event.phase == 'moved' then
+			if event.phase == 'moved' and not mouvement.isEnMouvement then
 
 				--create end point object for visualization
 				if not ( newPoint ) then
@@ -77,10 +131,8 @@ function _M.newParcours(params)
 				end
 
 				local nbPointParcours = getNbPointParcours()
-
 				-- si distance trop courte entre deux points alors pas de trace
 				local previousPoint = getLastPointParcours()
-
 
 				--Debut du trace
 				if ( nbPointParcours < 2 ) then
@@ -109,25 +161,56 @@ function _M.newParcours(params)
 			else
 				self.x = event.x
 				self.y =  event.y
+				display.getCurrentStage():setFocus(self, nil)
+				self.isFocused = false
 				addPointToParcours(event)
-				nbArret = nbArret + 1
+				nbArret = nbArret - 1
 				if ( path and path.x and getNbPointParcours() > 2 ) then 
 								path:append( event.x, event.y ) 
 				end
 	
-				display.getCurrentStage():setFocus(self, nil)
-				self.isFocused = false
+				--on supprime trace avant simulation du parcours
+				if ( path ) then 
+						display.remove( path ) 
+				end
+
+				--arret chrono
+				timer.pause(countDownTimer)
 
 				--debut animation du parcours
+
 				followParams = { segmentTime=50, constantRate=true, showPoints=true, 
-										pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pathPoints[1],pointArrivee=event}
+										pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pathPoints[1],pointArrivee=pointArrivee}
+
+				print ("animation entre "..pathPoints[1].x,pathPoints[1].y.."  et "..pathPoints[#pathPoints].x,pathPoints[#pathPoints].y)
 				
-				self.mouvement:start(followParams)
+				--replacement du pointTracage aprs fin du mouvement
+				if not pointTracage.perdu then
+					mouvement:start(followParams)
+				end
+				if checkPosition then
+						timer.cancel(checkPosition)
+				end	
+				checkPosition=timer.performWithDelay(200, function()
+					if not mouvement.isEnMouvement and not pointTracage.perdu then
+						pointTracage.x,pointTracage.y=mouvement.x,mouvement.y
+						
+					end
+				end, 0)
+				
 			end
 		end
 		return true
 	end
+
+	function pointTracage:repositionne(coord )
+		pointTracage.x = coord .x
+		pointTracage.y = coord.y
+		-- body
+	end
+
 	pointTracage:addEventListener('touch')
+	return pointTracage
 end
 
 

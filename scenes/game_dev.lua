@@ -12,7 +12,7 @@ local score = require('classes.score')
 local newParcours = require('classes.parcours').newParcours -- parcours du joueur
 local newEndLevelPopup = require('classes.end_level_popup').newEndLevelPopup -- Win/Lose dialog windows
 local newFollower = require('classes.follower').newFollower -- parcours du joueur
-
+local newMap = require('classes.map').newMap -- Building blocks for the levels
 
 physics.start()
 
@@ -62,8 +62,7 @@ local countDownTimer
 local blocs = display.newGroup()
 
 local playerCollisionFilter = { categoryBits=1, maskBits=6 } --collision avec brick(2) et ovni(4)
-local brikCollisionFilter = { categoryBits=2, maskBits=5 } --collision avec player(1) et ovni (4)
-local ovniCollisionFilter = { categoryBits=4, maskBits=3 } --collision avec brick(2) et player(1)
+
 
 
 local depart_x 
@@ -85,101 +84,49 @@ local function distanceBetween( point1, point2 )
 end
 
 
-
--- gestion de la colision ovni avec un bloc
-local function ovniCollision(event)
-	if event.phase== 'began' then
-		-- print ("ovni collision began de "..event.target.name.." avec "..event.other.name)
-		if event.other.name == 'brick'  then
-		 		
-		 		 event.target:setLinearVelocity(event.target.speed, 0 )
-		 		 event.target.speed = - event.target.speed
-		 		 return true
-		 		
-			end
-		
-	elseif event.phase == "ended" then
-		--print ("ovni collision ended ")
-		if event.other.name == 'player' then
-			print ("ARRET Transition ")
-			--event.target:setLinearVelocity(0, 0 )
-			transition.cancel("rebondObject")
-			reinitFollower()
-			return true
-		  		
-		end
+local function checkTimer()
+	--print("checkTimer")
+	if clock.millisecondsLeft <= 0 then 
+		isMovedAvailable=0
+		print(" AIE AIE fin TIMER !!!!!")
 	end
+
+	return clock:updateTime()
+end
+
+--Fonction de reinit du chemin et du trace
+-- suppression des points et des segments utilises
+-- supression de la transition
+-- supression des objets du module follower encore presents
+local function clearPath()
+	--reset/clear core
+		if ( path ) then display.remove( path ) end
+		if leadingSegment then display.remove( leadingSegment ) end
+		for i = #pathPoints,1,-1 do pathPoints[i] = nil end
+		
+		if ( anchorPoints[2] ) then display.remove( anchorPoints[2] ) end
+		
+		--reset/clear follow module items (remove these lines if not using "follow.lua")
+		transition.cancel( "moveObject" )
+		--if ( followModule.obj ) then display.remove( followModule.obj ) ; followModule.obj = nil end
+		--suppression du trace 
+		if ( followModule.ppg ) then
+			for p = followModule.ppg.numChildren,1,-1 do display.remove( followModule.ppg[p] ) end
+		end
+
+		-- reinit clockTimer
+		if clock.millisecondsLeft<=0 then 
+			-- print("reinit timer .......")
+			clock.clockText.text=" "
+			clock.millisecondsLeft=25000
+			countDownTimer = timer.performWithDelay( 100, checkTimer ,250 ) 
+			
+		end
+		
 end
 
 
---creation du level 
---  creation des brik et bloc selon matrice de level
-function buildLevel(level)
-	local blocTable = { 
-		width = 32,
-		height = 32, 
-		numFrames = 240,
-		sheetContentWidth=512,
-		sheetContentHeight=480
-	}
-	
-	local blocSheet = graphics.newImageSheet( "images/fond2.png", blocTable )
-    -- Level length, height
 
-    local len = table.maxn(level)
-
-   for i = 1, len do
-        for j = 1, W_LEN do
-  			
-            if(level[i][j] == 5) then
-                --local brick = display.newImage('brick.png')
-                local brick=display.newImageRect( blocSheet, 201, size_x, size_y )
-                brick.name = 'brick'
-                brick.x = size_x*j 
-                brick.y = size_y*i
-                physics.addBody(brick, {density = 1, friction = 0, bounce = 0,filter=brikCollisionFilter})
-                brick.bodyType = 'static'
-                blocs.insert(blocs, brick)
-            end
-            if(level[i][j] == 2) then
-            	--local ovni=display.newRect(120,220,size_x,size_y)
- 				local ovni=display.newImageRect( blocSheet, 196, size_x, size_y )
-            	ovni.name = 'ovni'
-            	ovni.x = size_x*j
-            	ovni.y = size_y*i
-            	physics.addBody(ovni,{density = 1, friction = 0, bounce = 0,filter=ovniCollisionFilter})
-            	ovni.bodyType = 'dynamic'
-            	ovni.gravityScale = 0
-            	speedOvni = math.random(50,100)
-            	ovni.speed = speedOvni
-            	ovni:setLinearVelocity( speedOvni, 0 )
-            	ovni:addEventListener( 'collision', ovniCollision )
-            	blocs.insert(blocs,ovni)
-            end
-           
-            if(level[i][j] == 8) then
-            	--print("entree ".. size_x*j..","..size_y*i)
-            	depart_x=j
-            	depart_y=i
-  				entree=display.newImageRect( "images/start.png",  size_x, size_y )
-  				entree.x=size_x*j
-  				entree.y=size_y*i
-            end
-            if(level[i][j] == 9) then
-            	--print("arrivee ".. size_x*j..","..size_y*i)
-            	finish_x=j
-            	finish_y=i
-				arrivee=display.newImageRect( "images/finish1.png",  size_x, size_y )
-  				arrivee.x=size_x*j
-  				arrivee.y=size_y*i
-            end
-  		
-        end
-    end
-
-    blocs:toFront()
-  
-end
 
 
 ----------------------------------------------------------------------
@@ -189,42 +136,64 @@ function scene:create( event )
 	local sceneGroup = self.view
 	self.levelId = event.params
 	print('level '..self.levelId)
-	self.level = require('levels.' .. self.levelId)
+	
 
-	withBrouillard = self.level.withBrouillard
+	-- withBrouillard = self.level.withBrouillard
 -- constrcution du niveau (bloc, trou, entree, arrivee)
-	buildLevel(self.level.blocs)
+	--buildLevel(self.level.blocs)
+		
+	self.map = newMap({size_x=size_x, size_y=size_y, levelId = self.levelId})
 
-	sceneGroup:insert(entree)
-	sceneGroup:insert(arrivee)
+	-- sceneGroup:insert(self.map.entree)
+	-- sceneGroup:insert(map.arrivee)
 	sceneGroup.isVisible = true
 	
-	sceneGroup:insert(blocs)
-  
+	--sceneGroup:insert(blocs)
+
+     
+	
+
+
+     --ajout du timer
+     clock.newTimer({
+     					durationPreparation=25000,
+     					x=display.contentCenterX,
+     					y=1,
+     					size=40
+     				})
      --clock.clockText:setfillcolor(0.7,0.7,1)
     
-    bestParcours.calculParcours(self.level.blocs,{pos1_x=depart_x,pos1_y=depart_y,
-    												pos2_x=finish_x,pos2_y=finish_y
-    												})
+--     bestParcours.calculParcours(self.level.blocs,{pos1_x=map.depart_x,pos1_y=map.depart_y,
+--     												pos2_x=map.finish_x,pos2_y=map.finish_y
+--     												})
+-- print('distance total cible '..bestParcours.listOfPoints.distance)
+
+   --  for k, node in ipairs(bestParcours.listOfPoints) do
+   --  		local dot = display.newCircle( node.x,node.y, 6 )
+			-- dot:setFillColor( 1, 1, 1, 0.4 )
+   --  end
 
     score.initScore()
     score.nbarret=5
-    score.distanceCible=bestParcours.listOfPoints.distance
+    --score.distanceCible=bestParcours.listOfPoints.distance
 
-    aff_score=display.newText("0".."/"..score.distanceCible, 80, 1, native.systemFontBold, 30)
-	aff_ptarret=display.newText(score.nbarret, 700, 1, native.systemFontBold, 30)
+ --    aff_score=display.newText("0".."/"..score.distanceCible, 80, 1, native.systemFontBold, 30)
+	-- aff_ptarret=display.newText(score.nbarret, 700, 1, native.systemFontBold, 30)
 
-   sceneGroup:insert(aff_score)
-   sceneGroup:insert(aff_ptarret)
+ --   --followModule.init(follower,arrivee)
+
+
+ --   sceneGroup:insert(aff_score)
+ --   sceneGroup:insert(aff_ptarret)
    
 
-	local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
-					 pathPrecision=20 ,pointDepart=entree,pointArrivee=arrivee}
+local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
+					 pathPrecision=20 ,pointDepart=self.map.entree,pointArrivee=self.map.arrivee}
 	--initialise simulaton pour calculer la distante restant effective
    self.simulation=newFollower(followParams)
    sceneGroup:insert(self.simulation)
    -- initialise le tracage du parcours
-   	self.parcours = newParcours({start=entree, level = self.levelId,fin=arrivee, nbArretMax= 5},self.simulation)
+   	self.parcours = newParcours({start=map.entree, level = self.levelId,fin=map.arrivee},self.simulation)
 
    	--initialise le controle a tout instant de la fin du niveau
 	self.endLevelPopup = newEndLevelPopup({g = sceneGroup, levelId = self.levelId})
@@ -238,18 +207,22 @@ function scene:endLevelCheck()
 	if self.simulation.distancerestante<20 then
 		 if not self.isPaused then
 			print ("WIN !!!")
+			clearPath()
 			clock.clockText.text=" "
 			clock=nil
+			if ( anchorPoints[1] ) then display.remove( anchorPoints[1] ) end
 			self:setIsPaused(true)
 		    self.endLevelPopup:show({isWin = true})
 		    timer.cancel(self.endLevelCheckTimer)
 			self.endLevelCheckTimer = nil
 		end
-	elseif score.nbarret<=0 or self.parcours.perdu then
+	elseif score.nbarret<=0 then
 		 if not self.isPaused then
 			print ("PERDU !!!")
+			clearPath()
 			clock.clockText.text=" "
 			clock=nil
+			if ( anchorPoints[1] ) then display.remove( anchorPoints[1] ) end
 			self:setIsPaused(true)
 		    self.endLevelPopup:show({isWin = false})
 		    timer.cancel(self.endLevelCheckTimer)
@@ -282,7 +255,25 @@ function scene:didEnter( event )
 	--local sceneGroup = self.view   
   	local sceneGroup = self.view
 	
-	-- Only check once in a while for level end
+	-- g=display.newGroup()
+  
+ --   anchorPoints[1] = display.newCircle( entree.x, entree.y, 10 )
+ -- --   brouillard = display.newImageRect( 'images/end_level.png', 480, 480)
+	-- -- brouillard.fill.effect = "filter.iris"
+	-- -- brouillard.fill.effect.center = { 0.5, 0.5 }
+	-- -- brouillard.fill.effect.aperture = 0.5
+	-- -- brouillard.fill.effect.aspectRatio = ( brouillard.width / brouillard.height )
+	-- -- brouillard.fill.effect.smoothness = 0.5
+
+ --    brouillard.x=entree.x
+ --    brouillard.y=entree.y
+   -- g:insert(anchorPoints[1])
+   -- g:insert(brouillard)
+   -- g:addEventListener( "touch", drawPath )  
+   --brouillard:addEventListener("touch",movebrouillard)
+   --follower:addEventListener( 'collision', blocCollision )
+     
+     -- Only check once in a while for level end
 		self.endLevelCheckTimer = timer.performWithDelay(1000, function()
 			self:endLevelCheck()
 		end, 0)

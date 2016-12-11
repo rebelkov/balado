@@ -30,6 +30,10 @@ function _M.updateTime()
 	_M.clockText.text=_M.timeDisplay
 end
 
+function _M.finTime()
+		
+	_M.clockText.text="Trop tard ..."
+end
 
 
 return _M

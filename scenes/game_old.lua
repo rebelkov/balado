@@ -85,6 +85,254 @@ local function distanceBetween( point1, point2 )
 end
 
 
+local function checkTimer()
+	--print("checkTimer")
+	if clock.millisecondsLeft <= 0 then 
+		isMovedAvailable=0
+		print(" AIE AIE fin TIMER !!!!!")
+	end
+
+	return clock:updateTime()
+end
+
+--Fonction de reinit du chemin et du trace
+-- suppression des points et des segments utilises
+-- supression de la transition
+-- supression des objets du module follower encore presents
+local function clearPath()
+	--reset/clear core
+		if ( path ) then display.remove( path ) end
+		if leadingSegment then display.remove( leadingSegment ) end
+		for i = #pathPoints,1,-1 do pathPoints[i] = nil end
+		
+		if ( anchorPoints[2] ) then display.remove( anchorPoints[2] ) end
+		
+		--reset/clear follow module items (remove these lines if not using "follow.lua")
+		transition.cancel( "moveObject" )
+		--if ( followModule.obj ) then display.remove( followModule.obj ) ; followModule.obj = nil end
+		--suppression du trace 
+		if ( followModule.ppg ) then
+			for p = followModule.ppg.numChildren,1,-1 do display.remove( followModule.ppg[p] ) end
+		end
+
+		-- reinit clockTimer
+		if clock.millisecondsLeft<=0 then 
+			-- print("reinit timer .......")
+			clock.clockText.text=" "
+			clock.millisecondsLeft=25000
+			countDownTimer = timer.performWithDelay( 100, checkTimer ,250 ) 
+			
+		end
+		
+end
+
+
+local function animation(event)
+		timer.cancel(countDownTimer)
+
+		clock.clockText.text="good luck "
+		if (path) then display.remove(path) end
+		if ( leadingSegment ) then display.remove( leadingSegment ) end
+
+		local distFinish=distanceBetween(event,arrivee) 
+		
+		--start follow module
+		if ( #pathPoints > 1 ) then
+			followModule.start( followParams, pathPoints, pathPrecision, anchorPoints[1],follower,playerSprite )
+			--print('distance reel '..followModule.distancereel)
+			score.distanceRealise=math.floor(score.distanceRealise+followModule.distancereel)
+			startx = anchorPoints[2].x
+			starty = anchorPoints[2].y
+			anchorPoints[1].x = startx
+			anchorPoints[1].y = starty
+			playerSprite:toFront()
+			score.nbarret=score.nbarret - 1
+		
+		end
+		
+		aff_score.text=score.distanceRealise.."/"..score.distanceCible
+		aff_ptarret.text=score.nbarret
+end
+
+--fonction tracage du chemin - appel suite a evenement move
+-- phase 1 - init
+--  			nettoyage chemin 
+--				calcul de distance avec point initial
+--				if distance > 20 alors nouveaux point avec coordonnee
+-- phase 2 - move -  mouvement et distance < 20 (arret du move)
+-- cette phase ets execute tant que le user ne relache pas 
+--  		calcul de la distance avec point precedent
+--			affichage du point a la coordonnee si distance ok
+--			affichage du segment de trace, ou non
+--          sauvegarde du point final si distance ok en precision 
+-- phase 3 - fin de move - relachement
+--        sauvegarde du point arrive
+--		 ajout du chemin 	
+-- 		 calcul de la distance avec point arrivee
+--       appel du module animation du parcours
+--         update du nouveau point de depart
+--       test si arrivee
+local function drawPath( event, start )
+	if (isFollowing == 1 or score.nbarret<=0) then
+		return true
+	end
+	local bx,by
+	if ( event.phase == "began" ) then
+		-- print ("draw path "..event.phase)
+		clock.millisecondsLeft=25000
+		countDownTimer = timer.performWithDelay( 100, checkTimer ,250 ) 
+		clearPath()
+		-- print ("Path point START "..#pathPoints)
+
+		local distStart=distanceBetween(event,anchorPoints[1]) 
+		
+		if distStart > 20 then
+			isMovedAvailable = 0
+		
+		--create start point object for visualization
+		else
+			isMovedAvailable = 1
+			anchorPoints[1]:setFillColor( 0.8, 0.8, 0.9 )
+			display.getCurrentStage():setFocus( anchorPoints[1] )
+			pathPoints[#pathPoints+1] = { x=startx, y=starty }
+					
+
+		end
+	elseif ( event.phase == "moved" and isMovedAvailable == 1) then
+		local previousPoint = pathPoints[#pathPoints]
+		local dist = distanceBetween( previousPoint, event )
+
+		--create end point object for visualization
+		if not ( anchorPoints[2] ) then
+			anchorPoints[2] = display.newCircle( event.x, event.y, 10 )
+			anchorPoints[2]:setFillColor( 0.5, 0.5, 0.8 )
+		end
+		
+		--affiche trace : cache premier point derriere cercle
+		-- on suprime le chemin complet si premier point
+		-- sinon on supprime objet segment memoire
+		--Si trop loin pas de trcae 
+		if isDragAvailable == 1 then
+			if ( #pathPoints < 2 ) then
+				if ( path ) then display.remove( path ) end
+				-- print("pervious "..previousPoint.y)
+				path = display.newLine( previousPoint.x, previousPoint.y, event.x, event.y )
+				path:setStrokeColor( 0.5, 0.5, 1 )
+				path.strokeWidth = 4
+				--path:toBack()
+				path:toFront()
+			
+			end
+
+							
+ 			
+		end
+
+		--move end point in unison with touch
+		anchorPoints[2].x = event.x
+		anchorPoints[2].y = event.y
+		
+		-- si assez de distance ajout point et ajoute segment
+		if ( dist >= pathPrecision and distStart < 20 ) then
+			pathPoints[#pathPoints+1] = { x=event.x, y=event.y }
+
+			if (path and path.x and  #pathPoints > 2 ) then path:append( event.x, event.y ) end
+		end
+
+		--fin du deplacement - following
+	elseif ( (event.phase == "ended" or event.phase == "cancelled") and isMovedAvailable ==1 ) then
+	 -- print ("Relachement draw path "..event.phase)
+		pathPoints[#pathPoints+1] = { x=event.x, y=event.y }
+		if ( path and path.x and #pathPoints > 2 ) then path:append( event.x, event.y ) end
+	
+		animation(event)
+		display.getCurrentStage():setFocus( nil )
+		anchorPoints[1].isFocus = nil
+
+	end
+
+	if isMovedAvailable==0 and event.phase ~= "began" then
+		-- print("Animation forced")
+		score.nbarret=score.nbarret - 1
+		aff_ptarret.text=score.nbarret
+		animation(event)
+	end
+	return true
+end
+
+-- touch listener function
+function movebrouillard( event )
+    if event.phase == "began" then
+	
+        self.markX = self.x    -- store x location of object
+        self.markY = self.y    -- store y location of object
+	
+    elseif event.phase == "moved" then
+	
+        local x = (event.x - event.xStart) + self.markX
+        local y = (event.y - event.yStart) + self.markY
+        
+        self.x, self.y = x, y    -- move object based on calculations above
+    end
+    
+    return true
+end
+
+local function finRebond()
+	print ("Rebond - anchorPoints[1] "..anchorPoints[1].x.."/"..anchorPoints[1].y)
+end
+
+
+-- gestion de la colision du player avec un bloc
+local function blocCollision(event)
+	
+	-- print ("Collision "..event.phase)
+	if event.phase== 'began' then
+			local nbcase_rebond=3
+			if (follower.nextPoint <= nbcase_rebond) then
+				nbcase_rebond=follower.nextPoint - 1
+			end 
+			local caseprec=follower.nextPoint-nbcase_rebond
+			isFollowing = 0
+			
+			if (nbcase_rebond > 0 and #pathPoints > 0 and #pathPoints > caseprec ) then
+				anchorPoints[1].x = pathPoints[caseprec].x
+				anchorPoints[1].y = pathPoints[caseprec].y
+			
+			end
+
+			startx=anchorPoints[1].x
+			starty=anchorPoints[1].y
+			
+		 	if (#pathPoints > caseprec and caseprec > 0 ) then
+		  		-- print ("je recule de "..nbcase_rebond.." cases  "..pathPoints[caseprec].x.. " / "..pathPoints[caseprec].y)
+		  		transition.cancel("rebondObject")
+		  		transition.to( follower, {
+							tag = "rebondObject",
+							x = pathPoints[caseprec].x,
+							y = pathPoints[caseprec].y
+				})
+		  		transition.to( playerSprite, {
+							tag = "rebondObject",
+							x = pathPoints[caseprec].x,
+							y = pathPoints[caseprec].y
+				})
+				
+   				
+   		 	end
+
+   		 	score.nbarret=score.nbarret + 1
+				
+	elseif event.phase == "ended" then
+	
+	clearPath()
+	--clearPath()
+	end
+
+-- return true					
+			
+end
+
 
 -- gestion de la colision ovni avec un bloc
 local function ovniCollision(event)
@@ -178,7 +426,8 @@ function buildLevel(level)
     end
 
     blocs:toFront()
-  
+
+    
 end
 
 
@@ -194,18 +443,36 @@ function scene:create( event )
 	withBrouillard = self.level.withBrouillard
 -- constrcution du niveau (bloc, trou, entree, arrivee)
 	buildLevel(self.level.blocs)
+	
 
 	sceneGroup:insert(entree)
 	sceneGroup:insert(arrivee)
 	sceneGroup.isVisible = true
 	
 	sceneGroup:insert(blocs)
-  
+
+     
+	
+
+
+     --ajout du timer
+     clock.newTimer({
+     					durationPreparation=25000,
+     					x=display.contentCenterX,
+     					y=1,
+     					size=40
+     				})
      --clock.clockText:setfillcolor(0.7,0.7,1)
     
     bestParcours.calculParcours(self.level.blocs,{pos1_x=depart_x,pos1_y=depart_y,
     												pos2_x=finish_x,pos2_y=finish_y
     												})
+print('distance total cible '..bestParcours.listOfPoints.distance)
+
+   --  for k, node in ipairs(bestParcours.listOfPoints) do
+   --  		local dot = display.newCircle( node.x,node.y, 6 )
+			-- dot:setFillColor( 1, 1, 1, 0.4 )
+   --  end
 
     score.initScore()
     score.nbarret=5
@@ -214,17 +481,20 @@ function scene:create( event )
     aff_score=display.newText("0".."/"..score.distanceCible, 80, 1, native.systemFontBold, 30)
 	aff_ptarret=display.newText(score.nbarret, 700, 1, native.systemFontBold, 30)
 
+   --followModule.init(follower,arrivee)
+
+
    sceneGroup:insert(aff_score)
    sceneGroup:insert(aff_ptarret)
    
 
-	local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
+local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
 					 pathPrecision=20 ,pointDepart=entree,pointArrivee=arrivee}
 	--initialise simulaton pour calculer la distante restant effective
    self.simulation=newFollower(followParams)
    sceneGroup:insert(self.simulation)
    -- initialise le tracage du parcours
-   	self.parcours = newParcours({start=entree, level = self.levelId,fin=arrivee, nbArretMax= 5},self.simulation)
+   	self.parcours = newParcours({start=entree, level = self.levelId,fin=arrivee},self.simulation)
 
    	--initialise le controle a tout instant de la fin du niveau
 	self.endLevelPopup = newEndLevelPopup({g = sceneGroup, levelId = self.levelId})
@@ -238,18 +508,22 @@ function scene:endLevelCheck()
 	if self.simulation.distancerestante<20 then
 		 if not self.isPaused then
 			print ("WIN !!!")
+			clearPath()
 			clock.clockText.text=" "
 			clock=nil
+			if ( anchorPoints[1] ) then display.remove( anchorPoints[1] ) end
 			self:setIsPaused(true)
 		    self.endLevelPopup:show({isWin = true})
 		    timer.cancel(self.endLevelCheckTimer)
 			self.endLevelCheckTimer = nil
 		end
-	elseif score.nbarret<=0 or self.parcours.perdu then
+	elseif score.nbarret<=0 then
 		 if not self.isPaused then
 			print ("PERDU !!!")
+			clearPath()
 			clock.clockText.text=" "
 			clock=nil
+			if ( anchorPoints[1] ) then display.remove( anchorPoints[1] ) end
 			self:setIsPaused(true)
 		    self.endLevelPopup:show({isWin = false})
 		    timer.cancel(self.endLevelCheckTimer)
@@ -282,7 +556,25 @@ function scene:didEnter( event )
 	--local sceneGroup = self.view   
   	local sceneGroup = self.view
 	
-	-- Only check once in a while for level end
+	-- g=display.newGroup()
+  
+ --   anchorPoints[1] = display.newCircle( entree.x, entree.y, 10 )
+ -- --   brouillard = display.newImageRect( 'images/end_level.png', 480, 480)
+	-- -- brouillard.fill.effect = "filter.iris"
+	-- -- brouillard.fill.effect.center = { 0.5, 0.5 }
+	-- -- brouillard.fill.effect.aperture = 0.5
+	-- -- brouillard.fill.effect.aspectRatio = ( brouillard.width / brouillard.height )
+	-- -- brouillard.fill.effect.smoothness = 0.5
+
+ --    brouillard.x=entree.x
+ --    brouillard.y=entree.y
+   -- g:insert(anchorPoints[1])
+   -- g:insert(brouillard)
+   -- g:addEventListener( "touch", drawPath )  
+   --brouillard:addEventListener("touch",movebrouillard)
+   --follower:addEventListener( 'collision', blocCollision )
+     
+     -- Only check once in a while for level end
 		self.endLevelCheckTimer = timer.performWithDelay(1000, function()
 			self:endLevelCheck()
 		end, 0)
