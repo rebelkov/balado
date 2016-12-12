@@ -212,10 +212,10 @@ function scene:create( event )
     score.distanceCible=bestParcours.listOfPoints.distance
 
     aff_score=display.newText("0".."/"..score.distanceCible, 80, 1, native.systemFontBold, 30)
-	aff_ptarret=display.newText(score.nbarret, 700, 1, native.systemFontBold, 30)
+	--aff_ptarret=display.newText(score.nbarret, 700, 1, native.systemFontBold, 30)
 
    sceneGroup:insert(aff_score)
-   sceneGroup:insert(aff_ptarret)
+   --sceneGroup:insert(aff_ptarret)
    
 
 	local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
@@ -233,6 +233,7 @@ end
 
 
 -- Check if the player won or lost
+
 function scene:endLevelCheck()
 
 	if self.simulation.distancerestante<20 then
@@ -245,7 +246,7 @@ function scene:endLevelCheck()
 		    timer.cancel(self.endLevelCheckTimer)
 			self.endLevelCheckTimer = nil
 		end
-	elseif score.nbarret<=0 or self.parcours.perdu then
+	elseif self.parcours.perdu then
 		 if not self.isPaused then
 			print ("PERDU !!!")
 			clock.clockText.text=" "

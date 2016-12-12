@@ -1,5 +1,7 @@
 -- parcours
 -- consiste a creer l'objet pour tracer le parcours
+-- gere les collisions, le chronometre
+
 local _M = {}
 
 local util = require("classes.utilitaires")
@@ -37,6 +39,8 @@ function _M.newParcours(params,newFollower)
 	-- creation du point de tracage
 	local pointTracage=display.newCircle( pointDepart.x, pointDepart.y, 10 )
 
+	-- creation de affichage du nombre arret
+	local aff_ptarret=display.newText(nbarret, 700, 1, native.systemFontBold, 30)
 	-- local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
 	-- 									pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pointDepart,pointArrivee=pointArrivee}
 	 local mouvement =newFollower 
@@ -115,8 +119,7 @@ function _M.newParcours(params,newFollower)
 			addPointToParcours(event)
 
 			--demarrage ou reprise du chrono
-			--clock.millisecondsLeft=25000
-	 		if countDownTimer then timer.resume(countDownTimer)
+			if countDownTimer then timer.resume(countDownTimer)
 	 						else  countDownTimer = timer.performWithDelay( 100, checkTimer ,250 ) 
 	 		end
 			
@@ -134,12 +137,13 @@ function _M.newParcours(params,newFollower)
 				-- si distance trop courte entre deux points alors pas de trace
 				local previousPoint = getLastPointParcours()
 
-				--Debut du trace
+				-- si debut alors initialise objet de trace
 				if ( nbPointParcours < 2 ) then
 					--supprime ancien chemin
 					if ( path ) then 
 						display.remove( path ) 
 					end
+					-- initialise objet segment du parcours
 					path = display.newLine( previousPoint.x, previousPoint.y, event.x, event.y )
 					path:setStrokeColor( 0.5, 0.5, 1 )
 					path.strokeWidth = 4
@@ -158,7 +162,13 @@ function _M.newParcours(params,newFollower)
 				--move end point in unison with touch
 				newPoint.x = event.x
 				newPoint.y = event.y
+
 			else
+			-- relachement du trace
+			-- ajoute le dernier point au parcours
+			-- incrementation du nb arret
+			-- pause du chronometre
+			-- animation du parcours 
 				self.x = event.x
 				self.y =  event.y
 				display.getCurrentStage():setFocus(self, nil)
@@ -178,16 +188,18 @@ function _M.newParcours(params,newFollower)
 				timer.pause(countDownTimer)
 
 				--debut animation du parcours
-
 				followParams = { segmentTime=50, constantRate=true, showPoints=true, 
 										pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pathPoints[1],pointArrivee=pointArrivee}
 
-				print ("animation entre "..pathPoints[1].x,pathPoints[1].y.."  et "..pathPoints[#pathPoints].x,pathPoints[#pathPoints].y)
-				
-				--replacement du pointTracage aprs fin du mouvement
 				if not pointTracage.perdu then
 					mouvement:start(followParams)
 				end
+
+				nbArret = nbArret - 1
+				if nbArret <=0 then
+					pointTracage.perdu  =true
+				end
+				--replacement du pointTracage aprs fin du mouvement
 				if checkPosition then
 						timer.cancel(checkPosition)
 				end	
@@ -201,12 +213,6 @@ function _M.newParcours(params,newFollower)
 			end
 		end
 		return true
-	end
-
-	function pointTracage:repositionne(coord )
-		pointTracage.x = coord .x
-		pointTracage.y = coord.y
-		-- body
 	end
 
 	pointTracage:addEventListener('touch')
