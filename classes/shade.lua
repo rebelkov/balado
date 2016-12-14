@@ -14,14 +14,14 @@ function _M.newShade(group)
 
 	-- Prevent tapping
 	function shade:tap()
-		print("shade tap")
+		-- print("shade tap")
 		return true
 	end
 	shade:addEventListener('tap')
 
 	-- Prevent touching
 	function shade:touch()
-		print("shade touch")
+		-- print("shade touch")
 		return true
 	end
 	shade:addEventListener('touch')

@@ -40,7 +40,7 @@ function _M.newParcours(params,newFollower)
 	local pointTracage=display.newCircle( pointDepart.x, pointDepart.y, 10 )
 
 	-- creation de affichage du nombre arret
-	local aff_ptarret=display.newText(nbarret, 700, 1, native.systemFontBold, 30)
+	local aff_ptarret=display.newText(nbArret, 700, 1, native.systemFontBold, 30)
 	-- local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
 	-- 									pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pointDepart,pointArrivee=pointArrivee}
 	 local mouvement =newFollower 
@@ -174,7 +174,7 @@ function _M.newParcours(params,newFollower)
 				display.getCurrentStage():setFocus(self, nil)
 				self.isFocused = false
 				addPointToParcours(event)
-				nbArret = nbArret - 1
+				
 				if ( path and path.x and getNbPointParcours() > 2 ) then 
 								path:append( event.x, event.y ) 
 				end
@@ -196,6 +196,7 @@ function _M.newParcours(params,newFollower)
 				end
 
 				nbArret = nbArret - 1
+				aff_ptarret.text=nbArret
 				if nbArret <=0 then
 					pointTracage.perdu  =true
 				end
