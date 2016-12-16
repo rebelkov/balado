@@ -195,12 +195,23 @@ function scene:create( event )
 -- constrcution du niveau (bloc, trou, entree, arrivee)
 	buildLevel(self.level.blocs)
 
+local brouillard = display.newImageRect( "images/brouillard.png", 768, 1024 )
+brouillard:translate( display.contentCenterX, display.contentCenterY )
+
+local mask
+mask = graphics.newMask( "images/circle.png" )
+
+    brouillard:setMask( mask )
+-- brouillard.maskX=entree.x
+-- brouillard.maskY=entree.y
+
 	sceneGroup:insert(entree)
 	sceneGroup:insert(arrivee)
+
 	sceneGroup.isVisible = true
 	
 	sceneGroup:insert(blocs)
-  
+  sceneGroup:insert(brouillard)
      --clock.clockText:setfillcolor(0.7,0.7,1)
     
     bestParcours.calculParcours(self.level.blocs,{pos1_x=depart_x,pos1_y=depart_y,
@@ -246,7 +257,7 @@ function scene:endLevelCheck()
 		    timer.cancel(self.endLevelCheckTimer)
 			self.endLevelCheckTimer = nil
 		end
-	elseif self.parcours.perdu then
+	elseif self.parcours.perdu or self.simulation.perdu then
 		 if not self.isPaused then
 			print ("PERDU !!!")
 			clock.clockText.text=" "

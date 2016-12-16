@@ -40,13 +40,15 @@ function _M.newFollower(params)
 	follower.alpha=0.1
 
 	physics.addBody (follower, {bounce=0.8},{filter=followerCollisionFilter})
-	follower.isSleepingAllowed = false
+	follower.bodyType="dynamic"
+	follower.isSleepingAllowed = true
 	follower.gravityScale=0
 
 	follower.isEnMouvement=false
 	follower.distanceRealise=0
     follower.pointfinal=params.pointArrivee
     follower.distancerestante = 1000
+    follower.perdu = false
 	
 	local function angleBetween( srcX, srcY, dstX, dstY )
 		local angle = ( math.deg( math.atan2( dstY-srcY, dstX-srcX ) )+90 )
@@ -61,10 +63,14 @@ function _M.newFollower(params)
 	end
 
 	function follower:removeObj()
+		if playerSprite then
 			playerSprite:removeSelf()
 			playerSprite = nil
+		end
 	end
 
+--- arret du mouvement en raison de collision
+--- en cas de collision non stop , necessaire de stopper (suppression du follower, partie perdu)
 	function follower:arretMouvement()
 				playerSprite:pause()
 				isFollowing = 0	
@@ -72,7 +78,8 @@ function _M.newFollower(params)
 				transition.cancel( "moveObject" )
 				follower.distancerestante=distBetween(self.x,self.y,follower.pointfinal.x,follower.pointfinal.y)
 				follower.isEnMouvement=false
-				print("follower distante restante "..follower.distancerestante)
+				 follower:setLinearVelocity (0, 0)
+				print("nb collision "..nbcollision)
 
 	end
 
@@ -166,16 +173,26 @@ function _M.newFollower(params)
 		end
 		
     	--declenche animation du parcours
+    	nbcollision=0
 		follow( params,follower)
 	end
 
 	-- gestion de la colision du player avec un bloc
 	local function blocCollision(self,event)
-		if event.phase== 'began' then
 
-			 print ("Collision "..event.phase)	
+		if event.phase== 'began' then
+			print('collisin '..event.other.name)
+			 
+			 nbcollision = nbcollision + 1
 			 	--arret du mouvement	
-			 	follower:arretMouvement()
+			 	if event.other.name=="brick" then
+			 		follower:arretMouvement()
+			 	else 
+			 		--explosion folower
+			 		self:removeObj()
+			 		follower.perdu = true	
+			 	end
+
 
 		elseif event.phase == "ended" then
 				--replace point de tracage sur poit de collision

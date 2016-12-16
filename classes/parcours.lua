@@ -97,6 +97,8 @@ function _M.newParcours(params,newFollower)
 				timer.cancel(countDownTimer)
 				countDownTimer = nil
 			end
+			display.remove(aff_ptarret)
+			aff_ptarret=nil
 		
 			
 	end
@@ -182,6 +184,10 @@ function _M.newParcours(params,newFollower)
 				--on supprime trace avant simulation du parcours
 				if ( path ) then 
 						display.remove( path ) 
+				end
+				if  ( newPoint ) then
+						display.remove(newPoint)
+						newPoint = nil
 				end
 
 				--arret chrono
