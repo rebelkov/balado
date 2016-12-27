@@ -195,13 +195,13 @@ function scene:create( event )
 -- constrcution du niveau (bloc, trou, entree, arrivee)
 	buildLevel(self.level.blocs)
 
-local brouillard = display.newImageRect( "images/brouillard.png", 768, 1024 )
-brouillard:translate( display.contentCenterX, display.contentCenterY )
+-- local brouillard = display.newImageRect( "images/brouillard.png", 768, 1024 )
+-- brouillard:translate( display.contentCenterX, display.contentCenterY )
 
-local mask
-mask = graphics.newMask( "images/circle.png" )
+-- local mask
+-- mask = graphics.newMask( "images/circle.png" )
 
-    brouillard:setMask( mask )
+--     brouillard:setMask( mask )
 -- brouillard.maskX=entree.x
 -- brouillard.maskY=entree.y
 
@@ -211,7 +211,7 @@ mask = graphics.newMask( "images/circle.png" )
 	sceneGroup.isVisible = true
 	
 	sceneGroup:insert(blocs)
-  sceneGroup:insert(brouillard)
+  --sceneGroup:insert(brouillard)
      --clock.clockText:setfillcolor(0.7,0.7,1)
     
     bestParcours.calculParcours(self.level.blocs,{pos1_x=depart_x,pos1_y=depart_y,
