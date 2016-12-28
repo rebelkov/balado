@@ -5,6 +5,7 @@ local scene = composer.newScene()
 local physics = require "physics"
 
 local clock = require('classes.clockTimer')
+local sounds = require('libs.sounds') -- Music and sounds manager
 
 local bestParcours = require('classes.bestParcours')
 local score = require('classes.score')
@@ -250,6 +251,7 @@ function scene:endLevelCheck()
 	if self.simulation.distancerestante<20 then
 		 if not self.isPaused then
 			print ("WIN !!!")
+			sounds.play('win')
 			clock.clockText.text=" "
 			clock=nil
 			self:setIsPaused(true)
@@ -260,6 +262,7 @@ function scene:endLevelCheck()
 	elseif self.parcours.perdu or self.simulation.perdu then
 		 if not self.isPaused then
 			print ("PERDU !!!")
+			sounds.play('lose')
 			clock.clockText.text=" "
 			clock=nil
 			self:setIsPaused(true)

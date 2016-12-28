@@ -33,14 +33,14 @@ end
 local function handleSettingsButtonEvent( event )
 
     if ( "ended" == event.phase ) then
-        composer.gotoScene("scenes.gamesettings", { effect = "crossFade", time = 333 })
+        composer.gotoScene("scenes.parameters", { effect = "crossFade", time = 333 })
     end
 end
 
 
 -- Android's back button action
 function scene:gotoPreviousScene()
-    native.showAlert('Parcourarum', 'Are you sure you want to exit the game?', {'Yes', 'Cancel'}, function(event)
+    native.showAlert('AntLost', 'Are you sure you want to exit the game?', {'Yes', 'Cancel'}, function(event)
         if event.action == 'clicked' and event.index == 1 then
             native.requestExit()
         end
@@ -123,6 +123,9 @@ function scene:create( event )
     creditsButton.x = display.contentCenterX
     creditsButton.y = display.contentCenterY + 100
     sceneGroup:insert( creditsButton )
+
+
+    sounds.playStream('menu_music')
 
 end
 
