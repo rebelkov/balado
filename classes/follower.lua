@@ -110,7 +110,9 @@ function _M.newFollower(params)
 				--rotate object to face next point
 				if ( obj.nextPoint < #pathPoints ) then
 					obj.rotation = angleBetween( obj.x, obj.y, pathPoints[obj.nextPoint].x, pathPoints[obj.nextPoint].y )
-					playerSprite.rotation = obj.rotation 
+					if playerSprite then
+						playerSprite.rotation = obj.rotation 
+					end
 					--print ("rotation "..obj.rotation)
 				end
 			
@@ -189,7 +191,10 @@ function _M.newFollower(params)
 			 		follower:arretMouvement()
 			 	else 
 			 		--explosion folower
-			 		self:removeObj()
+			 		isFollowing=0
+			 		--follower:arretMouvement()
+			 		print("explosion")
+			 		--self:removeObj()
 			 		follower.perdu = true	
 			 	end
 
