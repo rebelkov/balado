@@ -58,26 +58,28 @@ function scene:create( event )
     -- setup a page background, really not that important though composer
     -- crashes out if there isn't a display object in the view.
     --
-    -- local background=display.newImage("images/fourmi_background.png")
-    --  sceneGroup:insert( background )
-
-local _W, _H, _CX, _CY = relayout._W, relayout._H, relayout._CX, relayout._CY
+    
+ local _W, _H, _CX, _CY = relayout._W, relayout._H, relayout._CX, relayout._CY
 
    
+local background=display.newImageRect("images/fourmi_background.png",_W,_H)
+background.x=_CX
+background.y=_CY
+     sceneGroup:insert( background )
 
-    local background = display.newRect(sceneGroup, _CX, _CY, _W, _H)
-    background.fill = {
-        type = 'gradient',
-        color1 = {0.2, 0.45, 0.8},
-        color2 = {0.7, 0.8, 1}
-    }
-    relayout.add(background)
+    -- local background = display.newRect(sceneGroup, _CX, _CY, _W, _H)
+    -- background.fill = {
+    --     type = 'gradient',
+    --     color1 = {0.2, 0.45, 0.8},
+    --     color2 = {0.7, 0.8, 1}
+    -- }
+    --relayout.add(background)
 
 
-    local title = display.newText("ANTLOST", 100, 32, native.systemFontBold, 64 )
+    local title = display.newText("LABYRANTE", 100, 32, native.systemFontBold,92 )
     title.x = display.contentCenterX
     title.y = 80
-    title:setFillColor( 1 )
+    title:setFillColor(0.2, 0.45, 0.8 )
     sceneGroup:insert( title )
 
     -- Create the widget

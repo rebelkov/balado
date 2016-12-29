@@ -1,5 +1,6 @@
 
 local composer = require( "composer" )
+local relayout = require('libs.relayout')
 
 local scene = composer.newScene()
 local physics = require "physics"
@@ -16,42 +17,21 @@ local newFollower = require('classes.follower').newFollower -- parcours du joueu
 
 
 physics.start()
-
 physics.setGravity(0, 0) 
-
 display.setStatusBar( display.HiddenStatusBar )
-
 --require "follow.lua" module (remove if using only main draw code)
-
-
 local followModule = require( "follow" )
 --declare follow module parameters (remove if using only main draw code)
 local followParams = { segmentTime=50, constantRate=true, showPoints=true }
 local parcours
-local path
-local leadingSegment
+
 local pathPoints = {}
-local anchorPoints = { {},{} }
-local nbarret = 0
 --adjust this number to effect the "smoothness" of the path; lower value yields a more precise path
 local pathPrecision = 20
 
 local entree
 local arrivee
 local bloc
-local startx = 20
-local starty = 1000
-local brouillard
-local endx = display.viewableContentWidth-20
-local endy = 100
-local distStart = 0
-local isDragAvailable = 1
-local isMovedAvailable = 1
-isFollowing = 0
-local follower
-local playerSprite
-local BRICK_W=20
-local BRICK_H=50
 local W_LEN=20
 -- print ("Width "..display.contentWidth)
 -- print ("Height "..display.contentHeight)
@@ -170,7 +150,7 @@ function buildLevel(level)
             	--print("arrivee ".. size_x*j..","..size_y*i)
             	finish_x=j
             	finish_y=i
-				arrivee=display.newImageRect( "images/finish1.png",  size_x, size_y )
+				arrivee=display.newImageRect( "images/finish.png",  size_x, size_y )
   				arrivee.x=size_x*j
   				arrivee.y=size_y*i
             end
@@ -189,48 +169,41 @@ end
 function scene:create( event )
 	local sceneGroup = self.view
 	self.levelId = event.params
-	print('level '..self.levelId)
 	self.level = require('levels.' .. self.levelId)
 
+
 	withBrouillard = self.level.withBrouillard
+    local _W, _H, _CX, _CY = relayout._W, relayout._H, relayout._CX, relayout._CY
+	local background = display.newRect(sceneGroup, _CX, _CY, _W, _H)
+    background.fill = {
+        type = 'gradient',
+        color1 = {0.2, 0.45, 0.8},
+        color2 = {0.7, 0.8, 1}
+    }
+    sceneGroup:insert(background)
+    --relayout.add(background)
 -- constrcution du niveau (bloc, trou, entree, arrivee)
 	buildLevel(self.level.blocs)
 
--- local brouillard = display.newImageRect( "images/brouillard.png", 768, 1024 )
--- brouillard:translate( display.contentCenterX, display.contentCenterY )
-
--- local mask
--- mask = graphics.newMask( "images/circle.png" )
-
---     brouillard:setMask( mask )
--- brouillard.maskX=entree.x
--- brouillard.maskY=entree.y
-
 	sceneGroup:insert(entree)
 	sceneGroup:insert(arrivee)
-
-	sceneGroup.isVisible = true
-	
 	sceneGroup:insert(blocs)
-  --sceneGroup:insert(brouillard)
-     --clock.clockText:setfillcolor(0.7,0.7,1)
-    
+
+	--calcul du parcours cible    
     bestParcours.calculParcours(self.level.blocs,{pos1_x=depart_x,pos1_y=depart_y,
     												pos2_x=finish_x,pos2_y=finish_y
     												})
+
 
     score.initScore()
     score.nbarret=5
     score.distanceCible=bestParcours.listOfPoints.distance
 
     aff_score=display.newText("0".."/"..score.distanceCible, 80, 1, native.systemFontBold, 30)
-	--aff_ptarret=display.newText(score.nbarret, 700, 1, native.systemFontBold, 30)
 
    sceneGroup:insert(aff_score)
-   --sceneGroup:insert(aff_ptarret)
-   
 
-	local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
+   local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
 					 pathPrecision=20 ,pointDepart=entree,pointArrivee=arrivee}
 	--initialise simulaton pour calculer la distante restant effective
    self.simulation=newFollower(followParams)

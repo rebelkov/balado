@@ -37,7 +37,11 @@ function _M.newParcours(params,newFollower)
 	local path
 	
 	-- creation du point de tracage
-	local pointTracage=display.newCircle( pointDepart.x, pointDepart.y, 10 )
+	local pointTracage=display.newCircle( pointDepart.x, pointDepart.y, 20 )
+	pointTracage:setFillColor(0.5,0.1,0.1,0.4)
+-- local pointTracage=display.newImageRect( "images/fourmi.png", 20,30 )
+-- pointTracage.x=pointDepart.x
+-- pointTracage.y=pointDepart.y
 
 	-- creation de affichage du nombre arret
 	local aff_ptarret=display.newText(nbArret, 700, 1, native.systemFontBold, 30)
@@ -115,7 +119,7 @@ function _M.newParcours(params,newFollower)
 			end
 			display.getCurrentStage():setFocus(self, event.id)
 			self.isFocused = true
-			self:setFillColor( 0.8, 0.8, 0.9 )
+			self:setFillColor( 0.8, 0.8, 0.9,0.1 )
 			--ajoute les coordonnee du point de depart au parcours util ?
 			clearParcours()
 			addPointToParcours(event)
