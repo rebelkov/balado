@@ -36,8 +36,8 @@ local W_LEN=20
 -- print ("Width "..display.contentWidth)
 -- print ("Height "..display.contentHeight)
 local size_x= (display.contentWidth - 30) / W_LEN
-local size_y=display.contentHeight / W_LEN
-
+local size_y= (display.contentHeight - 30) / W_LEN
+local origin_y = 30
 local speedOvni=50
 local countDownTimer
 local blocs = display.newGroup()
@@ -109,6 +109,9 @@ function buildLevel(level)
 
     local len = table.maxn(level)
 
+    local list_depart={}
+    local list_finish={}
+
    for i = 1, len do
         for j = 1, W_LEN do
   			
@@ -117,7 +120,7 @@ function buildLevel(level)
                 local brick=display.newImageRect( blocSheet, 201, size_x, size_y )
                 brick.name = 'brick'
                 brick.x = size_x*j 
-                brick.y = size_y*i
+                brick.y = origin_y+size_y*i
                 physics.addBody(brick, {density = 1, friction = 0, bounce = 0,filter=brikCollisionFilter})
                 brick.bodyType = 'static'
                 blocs.insert(blocs, brick)
@@ -127,7 +130,7 @@ function buildLevel(level)
  				local ovni=display.newImageRect( blocSheet, 196, size_x, size_y )
             	ovni.name = 'ovni'
             	ovni.x = size_x*j
-            	ovni.y = size_y*i
+            	ovni.y = origin_y+size_y*i
             	physics.addBody(ovni,{density = 1, friction = 0, bounce = 0,filter=ovniCollisionFilter})
             	ovni.bodyType = 'dynamic'
             	ovni.gravityScale = 0
@@ -140,24 +143,66 @@ function buildLevel(level)
            
             if(level[i][j] == 8) then
             	--print("entree ".. size_x*j..","..size_y*i)
-            	depart_x=j
-            	depart_y=i
-  				entree=display.newImageRect( "images/start.png",  size_x, size_y )
-  				entree.x=size_x*j
-  				entree.y=size_y*i
+            	list_depart[#list_depart+1]={x=j,y=i}
+      --       	depart_x=j
+      --       	depart_y=i
+  				-- entree=display.newImageRect( "images/start.png",  size_x, size_y )
+  				-- entree.x=size_x*j
+  				-- entree.y=origin_y+size_y*i
             end
             if(level[i][j] == 9) then
             	--print("arrivee ".. size_x*j..","..size_y*i)
-            	finish_x=j
-            	finish_y=i
-				arrivee=display.newImageRect( "images/finish.png",  size_x, size_y )
-  				arrivee.x=size_x*j
-  				arrivee.y=size_y*i
+            	list_finish[#list_finish+1]={x=j,y=i}
+    --         	finish_x=j
+    --         	finish_y=i
+				-- arrivee=display.newImageRect( "images/finish.png",  size_x, size_y )
+  		-- 		arrivee.x=size_x*j
+  		-- 		arrivee.y=origin_y+size_y*i
             end
   		
         end
     end
+    p=math.random(#list_depart)
+    print(p)
 
+   for i = 1, #list_depart do
+    	if i==p then
+     			depart_x=list_depart[i].x
+            	depart_y=list_depart[i].y
+  				entree=display.newImageRect( "images/start.png",  size_x, size_y )
+  				entree.x=size_x*list_depart[i].x
+  				entree.y=origin_y+size_y*list_depart[i].y
+  		else
+  			 local brick=display.newImageRect( blocSheet, 201, size_x, size_y )
+                brick.name = 'brick'
+                brick.x = size_x*list_depart[i].x
+                brick.y = origin_y+size_y*list_depart[i].y
+                physics.addBody(brick, {density = 1, friction = 0, bounce = 0,filter=brikCollisionFilter})
+                brick.bodyType = 'static'
+                blocs.insert(blocs, brick)
+  		end
+  	end
+
+ p=math.random(#list_finish)
+    for i = 1, #list_finish do
+    	if i==p then
+     			finish_x=list_finish[p].x
+            	finish_y=list_finish[p].y
+				arrivee=display.newImageRect( "images/finish.png",  size_x, size_y )
+  				arrivee.x=size_x*list_finish[p].x
+  				arrivee.y=origin_y+size_y*list_finish[p].y
+  		else
+  			 local brick=display.newImageRect( blocSheet, 201, size_x, size_y )
+                brick.name = 'brick'
+                brick.x = size_x*list_finish[i].x
+                brick.y = origin_y+size_y*list_finish[i].y
+                physics.addBody(brick, {density = 1, friction = 0, bounce = 0,filter=brikCollisionFilter})
+                brick.bodyType = 'static'
+                blocs.insert(blocs, brick)
+  		end
+  	end
+
+    
     blocs:toFront()
   
 end
@@ -199,7 +244,7 @@ function scene:create( event )
     score.nbarret=5
     score.distanceCible=bestParcours.listOfPoints.distance
 
-    aff_score=display.newText("0".."/"..score.distanceCible, 80, 1, native.systemFontBold, 30)
+    aff_score=display.newText("0".."/"..score.distanceCible, 80, 20, native.systemFontBold, 30)
 
    sceneGroup:insert(aff_score)
 

@@ -44,7 +44,7 @@ function _M.newParcours(params,newFollower)
 -- pointTracage.y=pointDepart.y
 
 	-- creation de affichage du nombre arret
-	local aff_ptarret=display.newText(nbArret, 700, 1, native.systemFontBold, 30)
+	local aff_ptarret=display.newText(nbArret, display.actualContentWidth - 20, 20, native.systemFontBold, 30)
 	-- local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
 	-- 									pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pointDepart,pointArrivee=pointArrivee}
 	 local mouvement =newFollower 
@@ -58,7 +58,7 @@ function _M.newParcours(params,newFollower)
      clock.newTimer({
      					durationPreparation=10000,
      					x=display.contentCenterX,
-     					y=1,
+     					y=20,
      					size=40
      				})
 
