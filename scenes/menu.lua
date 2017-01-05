@@ -33,14 +33,14 @@ end
 local function handleSettingsButtonEvent( event )
 
     if ( "ended" == event.phase ) then
-        composer.gotoScene("scenes.gamesettings", { effect = "crossFade", time = 333 })
+        composer.gotoScene("scenes.parameters", { effect = "crossFade", time = 333 })
     end
 end
 
 
 -- Android's back button action
 function scene:gotoPreviousScene()
-    native.showAlert('Parcourarum', 'Are you sure you want to exit the game?', {'Yes', 'Cancel'}, function(event)
+    native.showAlert('AntLost', 'Are you sure you want to exit the game?', {'Yes', 'Cancel'}, function(event)
         if event.action == 'clicked' and event.index == 1 then
             native.requestExit()
         end
@@ -59,12 +59,28 @@ function scene:create( event )
     -- crashes out if there isn't a display object in the view.
     --
     
-    
+ local _W, _H, _CX, _CY = relayout._W, relayout._H, relayout._CX, relayout._CY
 
-    local title = display.newText("PARCOURSLABY", 100, 32, native.systemFontBold, 64 )
+   
+local background=display.newImageRect("images/fourmi_background.png",_W,_H)
+background.x=_CX
+background.y=_CY
+     sceneGroup:insert( background )
+
+    -- local background = display.newRect(sceneGroup, _CX, _CY, _W, _H)
+    -- background.fill = {
+    --     type = 'gradient',
+    --     color1 = {0.2, 0.45, 0.8},
+    --     color2 = {0.7, 0.8, 1}
+    -- }
+    --relayout.add(background)
+
+
+    local title = display.newText("LABYRANTE", 100, 32, native.systemFontBold,92 )
+
     title.x = display.contentCenterX
     title.y = 80
-    title:setFillColor( 1 )
+    title:setFillColor(0.2, 0.45, 0.8 )
     sceneGroup:insert( title )
 
     -- Create the widget
@@ -123,6 +139,9 @@ function scene:create( event )
     creditsButton.x = display.contentCenterX
     creditsButton.y = display.contentCenterY + 100
     sceneGroup:insert( creditsButton )
+
+
+    sounds.playStream('menu_music')
 
 end
 

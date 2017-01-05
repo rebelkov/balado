@@ -78,6 +78,15 @@ function handler.calculateDiagonalDistance(a, b, costOfMove)
   return (costOfMove or 1) * math.max(dx, dy)
 end
 
+-- Returns Manhattan distance between nodes a and node b
+-- This should be the heuristic of choice for cardinal grids.
+function handler.calculateEuclidienneDistance(a, b, costOfMove)
+	
+  local dx, dy = a.x - b.x, a.y - b.y
+  return (costOfMove or 1) * (math.sqrt((4*dx*dx) + (dy*dy)))
+end
+
+
 -- Returns an array-list of neighbors of node n.
 function handler.getNeighbors(n)
   local neighbors = {}

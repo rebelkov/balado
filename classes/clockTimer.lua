@@ -22,7 +22,7 @@ function _M.newTimer(params)
 end
 
 function _M.updateTime()
-	print("updateTime")
+	--print("updateTime")
 	-- decrement the number of seconds
 	_M.millisecondsLeft = _M.millisecondsLeft - _M.dureeCycle
 	_M.timeDisplay=getDisplayTime(_M.millisecondsLeft)
@@ -30,6 +30,10 @@ function _M.updateTime()
 	_M.clockText.text=_M.timeDisplay
 end
 
+function _M.finTime()
+		
+	_M.clockText.text="Trop tard ..."
+end
 
 
 return _M

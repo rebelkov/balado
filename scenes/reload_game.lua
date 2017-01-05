@@ -36,7 +36,7 @@ function scene:create()
 
     -- Display three revolving cannon balls
     for i = 0, 2 do
-        local ball = display.newImageRect(ballsGroup, 'images/ammo/normal.png', 64, 64)
+        local ball = display.newImageRect(ballsGroup, 'images/fourmi.png', 128, 128)
         ball.x, ball.y = 0, 0
         ball.anchorX = -0.5
         ball.rotation = 120 * i

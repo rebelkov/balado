@@ -26,7 +26,27 @@ display.setDefault("background", 0.5, 0.5, 0.5)
 
 local composer = require('composer')
 composer.recycleOnSceneChange = true -- Automatically remove scenes from memory
-composer.setVariable('levelCount', 10) -- Set how many levels there are under levels/ directory
+composer.setVariable('levelCount', 20) -- Set how many levels there are under levels/ directory
+
+
+-- Exit and enter fullscreen mode
+-- CMD+CTRL+F on OS X
+-- F11 or ALT+ENTER on Windows
+if platform == 'Mac OS X' or platform == 'Win' then
+	Runtime:addEventListener('key', function(event)
+		if event.phase == 'down' and (
+				(platform == 'Mac OS X' and event.keyName == 'f' and event.isCommandDown and event.isCtrlDown) or
+					(platform == 'Win' and (event.keyName == 'f11' or (event.keyName == 'enter' and event.isAltDown)))
+			) then
+			if native.getProperty('windowMode') == 'fullscreen' then
+				native.setProperty('windowMode', 'normal')
+			else
+				native.setProperty('windowMode', 'fullscreen')
+			end
+		end
+	end)
+end
+
 
 -- Add support for back button on Android and Window Phone
 -- When it's pressed, check if current scene has a special field gotoPreviousScene
@@ -53,10 +73,18 @@ end
 local databox = require('libs.databox')
 databox({
 	isSoundOn = false,
-	isMusicOn = false,
+	isMusicOn = true,
 	isHelpShown = false,
 	overscanValue = 0
 })
+
+-- This library manages sound files and music files playback
+-- Inside it there is a list of all used audio files
+local sounds = require('libs.sounds')
+sounds.isSoundOn = databox.isSoundOn
+sounds.isMusicOn = databox.isMusicOn
+
+
 -- This library helps position elements on the screen during the resize event
 require('libs.relayout')
 

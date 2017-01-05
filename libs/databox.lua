@@ -16,6 +16,7 @@ local data = {}
 local defaultData = {}
 
 local path = system.pathForFile('databox.json', system.DocumentsDirectory)
+print(path)
 local isiOS = system.getInfo('platformName') == 'iPhone OS'
 local istvOS = system.getInfo('platformName') == 'tvOS'
 local isOSX = system.getInfo('platformName') == 'Mac OS X'
@@ -42,6 +43,7 @@ end
 
 -- When saving, upload to iCloud and save to disk
 local function saveData()
+    print("save databox")
     if iCloud then
         iCloud.set('databox', data)
     end

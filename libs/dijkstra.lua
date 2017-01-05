@@ -34,8 +34,10 @@ local function dijkstra(grid, source)
     for _, neighborNode in ipairs(neighbors) do
       -- We calculate the cost of move from the current node to its neighbor
       local costOfMoveToNeighborNode = grid.getMapValue(neighborNode.x, neighborNode.y)
+	  
       local distanceToNeighborNode = grid.distance(currentNode, neighborNode, costOfMoveToNeighborNode)
       local alt = currentNode.distance + distanceToNeighborNode
+	  --print('currentnode '..currentNode.x..','..currentNode.y..': '.. currentNode.distance..'+'..distanceToNeighborNode..' cost'..costOfMoveToNeighborNode)
       -- We relax the edge (currentNode->neighbor) in case there is a better alternative
       if alt < neighborNode.distance then
         neighborNode.distance = alt
