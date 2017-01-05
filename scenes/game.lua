@@ -144,20 +144,12 @@ function buildLevel(level)
             if(level[i][j] == 8) then
             	--print("entree ".. size_x*j..","..size_y*i)
             	list_depart[#list_depart+1]={x=j,y=i}
-      --       	depart_x=j
-      --       	depart_y=i
-  				-- entree=display.newImageRect( "images/start.png",  size_x, size_y )
-  				-- entree.x=size_x*j
-  				-- entree.y=origin_y+size_y*i
+     
             end
             if(level[i][j] == 9) then
             	--print("arrivee ".. size_x*j..","..size_y*i)
             	list_finish[#list_finish+1]={x=j,y=i}
-    --         	finish_x=j
-    --         	finish_y=i
-				-- arrivee=display.newImageRect( "images/finish.png",  size_x, size_y )
-  		-- 		arrivee.x=size_x*j
-  		-- 		arrivee.y=origin_y+size_y*i
+   
             end
   		
         end
