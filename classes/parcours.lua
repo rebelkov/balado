@@ -23,7 +23,7 @@ end
 
 
 
-function _M.newParcours(params,newFollower)
+function _M.newParcours(params,newFollower,adversaire)
 
 	local map = params.map
 	
@@ -39,18 +39,12 @@ function _M.newParcours(params,newFollower)
 	-- creation du point de tracage
 	local pointTracage=display.newCircle( pointDepart.x, pointDepart.y, 20 )
 	pointTracage:setFillColor(0.5,0.1,0.1,0.4)
--- local pointTracage=display.newImageRect( "images/fourmi.png", 20,30 )
--- pointTracage.x=pointDepart.x
--- pointTracage.y=pointDepart.y
-
 	-- creation de affichage du nombre arret
 	local aff_ptarret=display.newText(nbArret, display.actualContentWidth - 20, 20, native.systemFontBold, 30)
-	-- local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
-	-- 									pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pointDepart,pointArrivee=pointArrivee}
-	 local mouvement =newFollower 
 
-	--mouvement = newFollower(followParams)
-	
+     --instancie objet animation
+    local mouvement =newFollower 
+
 	pointTracage.distancerestante=200
 	pointTracage.perdu=false
 	
@@ -63,6 +57,8 @@ function _M.newParcours(params,newFollower)
      				})
 
 
+  
+
   -- update chrnometre pour le parcours
   -- fin du chrono alors arrte parcours et debut mouvement
 	local function checkTimer()
@@ -70,7 +66,6 @@ function _M.newParcours(params,newFollower)
 		if clock.millisecondsLeft <= 0 then 
 			mouvement.isEnMouvement = true
 			pointTracage.perdu=true
-			--print(" AIE AIE fin TIMER !!!!!")
 			return clock:finTime()
 		else 
 			return clock:updateTime()
@@ -89,6 +84,14 @@ function _M.newParcours(params,newFollower)
 			
 	end
 
+	local function mouvementAdverse()
+		--debut animation du parcours
+				adverseParams = { segmentTime=50, constantRate=true, showPoints=true, 
+										pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pathPoints[1],pointArrivee=pointArrivee}
+
+
+	end
+
 
 	function pointTracage:removeObj()
 			clearParcours()
@@ -103,7 +106,10 @@ function _M.newParcours(params,newFollower)
 			end
 			display.remove(aff_ptarret)
 			aff_ptarret=nil
-		
+			if parcoursAdverseTimer then 
+							timer.cancel(parcoursAdverseTimer)
+							parcoursAdverseTimer=nil
+			end
 			
 	end
 
@@ -197,9 +203,16 @@ function _M.newParcours(params,newFollower)
 				--arret chrono
 				timer.pause(countDownTimer)
 
+				-- debut parcours fourmi adverse en fond de tache
+				-- si objet deja present alors resume
+				if parcoursAdverseTimer then timer.resume(parcoursAdverseTimer)
+	 						else  parcoursAdverseTimer = timer.performWithDelay( 100, mouvementAdverse ,250 ) 
+	 			end
+
 				--debut animation du parcours
 				followParams = { segmentTime=50, constantRate=true, showPoints=true, 
 										pathPoints=pathPoints, pathPrecision=20 ,pointDepart=pathPoints[1],pointArrivee=pointArrivee}
+
 
 				if not pointTracage.perdu then
 					mouvement:start(followParams)
@@ -210,14 +223,20 @@ function _M.newParcours(params,newFollower)
 				if nbArret <=0 then
 					pointTracage.perdu  =true
 				end
+				
+
 				--replacement du pointTracage aprs fin du mouvement
+				-- mis en pause du parcours fourmi adverse
 				if checkPosition then
 						timer.cancel(checkPosition)
 				end	
 				checkPosition=timer.performWithDelay(200, function()
 					if not mouvement.isEnMouvement and not pointTracage.perdu then
 						pointTracage.x,pointTracage.y=mouvement.x,mouvement.y
-						
+						--arret du mvt adverse
+						if parcoursAdverseTimer then 
+							timer.pause(parcoursAdverseTimer)
+						end
 					end
 				end, 0)
 				

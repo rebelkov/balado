@@ -14,13 +14,13 @@ local score = require('classes.score')
 local newParcours = require('classes.parcours').newParcours -- parcours du joueur
 local newEndLevelPopup = require('classes.end_level_popup').newEndLevelPopup -- Win/Lose dialog windows
 local newFollower = require('classes.follower').newFollower -- parcours du joueur
-
+local newAdverse = require('classes.adverse').newAdverse --parcour adversaire
 
 physics.start()
 physics.setGravity(0, 0) 
 display.setStatusBar( display.HiddenStatusBar )
 --require "follow.lua" module (remove if using only main draw code)
-local followModule = require( "follow" )
+
 --declare follow module parameters (remove if using only main draw code)
 local followParams = { segmentTime=50, constantRate=true, showPoints=true }
 local parcours
@@ -55,7 +55,6 @@ local finish_y
 local aff_score
 local aff_ptarret
 
-local withBrouillard=false
 
 
 --function pour calculer la distance entre deux points
@@ -230,6 +229,14 @@ function scene:create( event )
     												pos2_x=finish_x,pos2_y=finish_y
     												})
 
+    --initialise parcours adversaire
+ 	local pointsAdverse=parcoursCible.listOfPoints
+    local adverseParams = { segmentTime=50, constantRate=true, showPoints=true, 
+					 pathPrecision=20 ,pointDepart=pointsAdverse[1],pointArrivee=pointsAdverse[#pointsAdverse]}
+
+	
+    self.adverseAnimation=newAdverse(adverseParams)
+    sceneGroup:insert(self.adverseAnimation)
 
     score.initScore()
     score.nbarret=5
@@ -239,13 +246,15 @@ function scene:create( event )
 
    sceneGroup:insert(aff_score)
 
+	--initialise votre parcours
    local followParams = { segmentTime=50, constantRate=true, showPoints=true, 
 					 pathPrecision=20 ,pointDepart=entree,pointArrivee=arrivee}
-	--initialise simulaton pour calculer la distante restant effective
+	
    self.simulation=newFollower(followParams)
+
    sceneGroup:insert(self.simulation)
    -- initialise le tracage du parcours
-   	self.parcours = newParcours({start=entree, level = self.levelId,fin=arrivee, nbArretMax= 5},self.simulation)
+   	self.parcours = newParcours({start=entree, level = self.levelId,fin=arrivee, nbArretMax= 5},self.simulation,self.adverseAnimation)
 
    	--initialise le controle a tout instant de la fin du niveau
 	self.endLevelPopup = newEndLevelPopup({g = sceneGroup, levelId = self.levelId})

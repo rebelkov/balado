@@ -55,7 +55,7 @@ local function getPathPoint(path)
 	
 	for k, node in ipairs(path) do
 	
-	print("node en case "..node.x.." "..node.y);
+	-- print("node en case "..node.x.." "..node.y);
 	
 		node.x=math.floor(node.x*size_x)
 		node.y=math.floor(node.y*size_y)
