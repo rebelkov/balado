@@ -36,7 +36,7 @@ function scene:create()
 
 	-- Button positioning is grid based, x,y are grid points
 	local x, y = -2, 0
-	local spacing = 160
+	local spacing = 140
 	for i = 1, composer.getVariable('levelCount') do
 		local button = widget.newButton({
 			id = i,
@@ -47,7 +47,7 @@ function scene:create()
 			labelYOffset = -10,
 			defaultFile = 'images/buttons/level.png',
 			overFile = 'images/buttons/level-over.png',
-			width = 150, height = 165,
+			width = 135, height = 145,
 			x = x * spacing, y = 32 + y * spacing + 90,
 			onRelease = onLevelButtonRelease
 		})

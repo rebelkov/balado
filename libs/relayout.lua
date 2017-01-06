@@ -5,6 +5,7 @@ local _M = {}
 -- Short names for screen width/height and it's center coordinates
 -- They get updated on resize event
 _M._W, _M._H = display.actualContentWidth, display.actualContentHeight
+
 _M._CX, _M._CY = _M._W / 2, _M._H / 2
 
 -- Perform actual relayout for each listener object or function

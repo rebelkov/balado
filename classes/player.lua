@@ -1,43 +1,87 @@
-
+-- player 
+-- consiste a creer l'objet pour tracer le parcours
 local _M = {}
 
-function _M.newPlayer(params)
+local util = require("classes.utilitaires")
 
-	local playerTable = { 
-		width = 16,
-		height = 16, 
-		numFrames = 16, 
-		sheetContentHeight = 64, 
-		sheetContentWidth = 64
-	}
+function _M.newParcours(params)
 
-	local sequenceData = {
-		name = "run",
-		frames = {1, 2,3,4},
-		time = 600 
-	}
-	--creation du sprite
-	local playerSheet =  graphics.newImageSheet( "images/ant.png", playerTable )
+	local map = params.map
+	local level = params.level
+	local pointDepart=params.entree
+	--adjust this number to effect the "smoothness" of the path; lower value yields a more precise path
+	local pathPrecision = 20
 
-	local playerSprite = display.newSprite( playerSheet, sequenceData ) 
+	local newPoint;
 
-	playerSprite.x=params.positionDepart_x
-	playerSprite.y=params.positionDepart_y
-	playerSprite.xScale, playerSprite.yScale = 2,2
+	-- creation du point de tracage
+	local pointTracage=display.newCircle( pointDepart.x, pointDepart.y, 10 )
 
+	-- Mouvement du point
+	-- le mouvement doit être suffisament long pour etre pris en compte (>20 px)
+	function pointTracage:touch(event)
 
-	--creation du follower pour le player
-	local follower = display.newCircle(0,-15,10)
-	follower.x= params.positionDepart_x
-	follower.y=params.positionDepart_y
-	follower.name = "player"
-	follower.alpha=0.1
+		if event.phase == 'began' then
+			display.getCurrentStage():setFocus(self, event.id)
+			self.isFocused = true
+			self:setFillColor( 0.8, 0.8, 0.9 )
+			--ajoute les coordonnee du point de depart au parcours util ?
+			self.parent:addPointToParcours(event)
+			
+			
+		elseif self.isFocused then
+			if event.phase == 'moved' then
 
-	physics.addBody (follower, {bounce=0.8},{filter=params.filter})
-	follower.isSleepingAllowed = false
-	follower.gravityScale=0
+				--create end point object for visualization
+				if not ( newPoint ) then
+					newPoint = display.newCircle( event.x, event.y, 10 )
+					newPoint:setFillColor( 0.5, 0.5, 0.8 )
+				end
 
-	return player
+				local nbPointParcours=self.parent:getNbPointParcours()
+
+				-- si distance trop courte entre deux points alors pas de trace
+				local previousPoint = self.parent:getLastPointParcours()
+
+				--Debut du trace
+				if ( nbPointParcours < 2 ) then
+					--supprime ancien chemin
+					if ( path ) then 
+						display.remove( path ) 
+					end
+					path = display.newLine( previousPoint.x, previousPoint.y, event.x, event.y )
+					path:setStrokeColor( 0.5, 0.5, 1 )
+					path.strokeWidth = 4
+					path:toFront()
+				
+				end
+				-- si assez de distance ajout point et ajoute segment
+				local dist = util.distanceEuclidienneBetween( previousPoint, event )
+				if ( dist >= pathPrecision ) then
+					self.parent:addPointToParcours(event)
+					if (path and path.x and  nbPointParcours >=2 ) then 
+							path:append( event.x, event.y ) 
+					end
+				end
+
+				--move end point in unison with touch
+				newPoint.x = event.x
+				newPoint.y = event.y
+			else
+
+				self.parent:addPointToParcours(event)
+				if ( path and path.x and self.parent:getNbPointParcours() > 2 ) then 
+								path:append( event.x, event.y ) 
+				end
+	
+				display.getCurrentStage():setFocus(self, nil)
+				self.isFocused = false
+				
+			end
+		end
+		return true
+	end
+	pointTracage:addEventListener('touch')
 end
 
 
